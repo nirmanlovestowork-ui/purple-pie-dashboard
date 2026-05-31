@@ -1,0 +1,42 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+        (request.auth.uid == "JPkhHP2LvZZvsBLEiAjGCm9fz5m1" || 
+         request.auth.token.email == "heynirman@gmail.com");
+    }
+
+    // Inventory: Public read, Admin write
+    match /inventory/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Orders: Admin only
+    match /orders/{document=**} {
+      allow read, write: if isAdmin();
+    }
+
+    // Sales: Admin only
+    match /sales/{document=**} {
+      allow read, write: if isAdmin();
+    }
+
+    // Metadata: Public read, Admin write
+    match /metadata/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Users: Owner or Admin
+    match /users/{userId} {
+      allow read, write: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+    }
+  }
+}

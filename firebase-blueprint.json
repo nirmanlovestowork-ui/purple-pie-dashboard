@@ -1,0 +1,58 @@
+{
+  "entities": {
+    "InventoryItem": {
+      "title": "Inventory Item",
+      "description": "Represents a bakery product in the inventory.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Name of the product" },
+        "price": { "type": "number", "description": "Unit price of the product" },
+        "stock": { "type": "number", "description": "Current stock quantity" },
+        "category": { "type": "string", "description": "Product category" }
+      },
+      "required": ["name", "price", "stock"]
+    },
+    "Sale": {
+      "title": "Sale Record",
+      "description": "Represents a completed sales transaction.",
+      "type": "object",
+      "properties": {
+        "invoiceNumber": { "type": "string", "description": "TPP/26-27/n format" },
+        "customerName": { "type": "string" },
+        "phoneNumber": { "type": "string" },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "itemId": { "type": "string" },
+              "name": { "type": "string" },
+              "price": { "type": "number" },
+              "quantity": { "type": "number" },
+              "subtotal": { "type": "number" }
+            }
+          }
+        },
+        "subtotal": { "type": "number" },
+        "discount": { "type": "number" },
+        "grandTotal": { "type": "number" },
+        "paymentMethod": { "type": "string", "enum": ["CASH", "UPI"] },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["invoiceNumber", "items", "grandTotal", "paymentMethod", "timestamp"]
+    },
+    "Metadata": {
+      "title": "App Metadata",
+      "description": "Stores global counters and settings.",
+      "type": "object",
+      "properties": {
+        "lastInvoiceNumber": { "type": "integer", "description": "The last used invoice increment" }
+      }
+    }
+  },
+  "firestore": {
+    "/inventory": { "schema": "InventoryItem", "description": "Product catalog and stock" },
+    "/sales": { "schema": "Sale", "description": "Sales transaction history" },
+    "/metadata": { "schema": "Metadata", "description": "System counters" }
+  }
+}
