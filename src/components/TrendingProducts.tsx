@@ -22,7 +22,7 @@ export default function TrendingProducts({ compact }: TrendingProductsProps) {
           <img 
             src={product.image} 
             alt={product.name} 
-            className={cn("rounded-lg object-cover shadow-sm border border-transparent", compact ? "h-10 w-10" : "h-14 w-14")}
+            className={cn("rounded-md object-cover shadow-sm border border-transparent", compact ? "h-10 w-10" : "h-14 w-14")}
             referrerPolicy="no-referrer"
           />
           <div className="flex-grow">

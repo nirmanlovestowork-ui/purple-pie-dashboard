@@ -44,14 +44,14 @@ export const TOP_SELLERS: TrendingProduct[] = [
   {
     name: 'Dual-Tone Chocolate Cake',
     description: 'Top Selling this week',
-    price: 'Rs. 750',
+    price: '₹750',
     image: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&q=80&w=200&h=200',
     tag: 'Signature'
   },
   {
     name: 'Vanilla Latte Tiramisu Cake',
     description: 'Trending Item',
-    price: 'Rs. 500',
+    price: '₹500',
     image: 'https://images.unsplash.com/photo-1571115177098-24ec42ed204d?auto=format&fit=crop&q=80&w=200&h=200'
   }
 ];

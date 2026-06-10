@@ -1,0 +1,10 @@
+{
+  "projectId": "the-purple-pie-admin-dashboard",
+  "appId": "1:1099125559977:web:cdd961b6c5da907dbc8fb8",
+  "apiKey": "AIzaSyAKvCkL3rc2AKLkCwEvlWnAh5pn7LGOY8M",
+  "authDomain": "the-purple-pie-admin-dashboard.firebaseapp.com",
+  "firestoreDatabaseId": "main-db",
+  "storageBucket": "the-purple-pie-admin-dashboard.firebasestorage.app",
+  "messagingSenderId": "1099125559977",
+  "measurementId": ""
+}

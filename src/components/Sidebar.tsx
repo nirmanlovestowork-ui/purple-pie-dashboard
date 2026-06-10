@@ -69,15 +69,15 @@ export default function Sidebar({ currentView, onNavigate, isMobileMenuOpen, set
                 key={item.id}
                 onClick={() => onNavigate(item.id)}
                 className={cn(
-                  "flex items-center gap-4 px-8 py-4 w-full text-left transition-all duration-200 ease-in-out relative",
+                  "flex items-center gap-4 px-6 py-3 mx-4 my-1 w-[calc(100%-2rem)] rounded-xl text-left transition-all duration-200 ease-in-out relative",
                   currentView === item.id 
-                    ? "text-accent-gold bg-sidebar-active" 
-                    : "text-white/80 hover:bg-sidebar-active/50 hover:text-white"
+                    ? "text-white bg-white/20 shadow-sm" 
+                    : "text-white/80 hover:bg-white/10 hover:text-white"
                 )}
               >
-                <item.icon size={20} className={cn(
+                <item.icon strokeWidth={2} size={20} className={cn(
                   "shrink-0 transition-colors duration-200",
-                  currentView === item.id ? "text-accent-gold" : "text-white/60"
+                  currentView === item.id ? "text-white" : "text-white/80"
                 )} />
                 <span className="text-sm font-bold tracking-wide">{item.label}</span>
               </button>
@@ -89,15 +89,15 @@ export default function Sidebar({ currentView, onNavigate, isMobileMenuOpen, set
           <button 
             onClick={() => onNavigate('/help')}
             className={cn(
-              "flex items-center gap-4 px-8 py-4 w-full text-left transition-all duration-200 ease-in-out",
+              "flex items-center gap-4 px-6 py-3 mx-4 mb-4 w-[calc(100%-2rem)] rounded-xl text-left transition-all duration-200 ease-in-out",
               currentView === '/help' 
-                ? "text-accent-gold bg-sidebar-active" 
-                : "text-white/80 hover:bg-sidebar-active/50 hover:text-white"
+                ? "text-white bg-white/20 shadow-sm" 
+                : "text-white/80 hover:bg-white/10 hover:text-white"
             )}
           >
-            <HelpCircle size={20} className={cn(
+            <HelpCircle strokeWidth={2} size={20} className={cn(
               "shrink-0",
-              currentView === '/help' ? "text-accent-gold" : "text-white/60"
+              currentView === '/help' ? "text-white" : "text-white/80"
             )} />
             <span className="text-sm font-bold tracking-wide">Help</span>
           </button>

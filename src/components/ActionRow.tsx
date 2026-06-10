@@ -21,14 +21,14 @@ export default function ActionRow({ onOrderSuccess, onScheduleOrder, onNewOrder 
       <div className="flex flex-row items-center gap-3 w-full md:w-auto">
         <button 
           onClick={onScheduleOrder}
-          className="flex-1 md:flex-none flex justify-center items-center gap-2 px-4 md:px-6 py-2.5 md:py-3 bg-btn-schedule text-sidebar font-bold text-sm rounded-xl shadow-sm hover:opacity-90 transition-opacity"
+          className="flex-1 md:flex-none flex justify-center items-center gap-2 px-4 md:px-6 py-2.5 md:py-3 bg-transparent border border-[#7D007E] text-[#7D007E] font-bold text-sm rounded-xl hover:bg-[#7D007E]/5 transition-colors"
         >
           <Calendar size={18} />
           <span className="truncate">Schedule</span>
         </button>
         <button 
           onClick={onNewOrder}
-          className="flex-1 md:flex-none flex justify-center items-center gap-2 px-4 md:px-6 py-2.5 md:py-3 bg-btn-new text-white font-bold text-sm rounded-xl shadow-md hover:opacity-90 transition-opacity"
+          className="flex-1 md:flex-none flex justify-center items-center gap-2 px-4 md:px-6 py-2.5 md:py-3 bg-[#7D007E] text-white font-bold text-sm rounded-xl shadow-md hover:bg-[#7D007E]/90 transition-colors"
         >
           <Plus size={18} />
           <span className="truncate">New Order</span>

@@ -189,12 +189,18 @@ export default function InventoryManagement({ isAddItemModalOpen, setIsAddItemMo
                 <span className="text-[10px] text-gray-400 font-medium">{item.category}</span>
               </div>
               <div className="text-right">
-                <span className={cn(
-                  "text-xs font-bold",
-                  item.maintainStock !== false && item.stock < 10 ? "text-red-500" : "text-gray-900"
-                )}>
-                  {item.maintainStock === false ? 'MTO' : item.stock}
-                </span>
+                {item.maintainStock === false ? (
+                  <span className="bg-yellow-100 text-yellow-800 rounded-full px-2 py-1 text-xs font-medium">
+                    MTO
+                  </span>
+                ) : (
+                  <span className={cn(
+                    "text-xs font-bold",
+                    item.stock < 10 ? "text-red-500" : "text-gray-900"
+                  )}>
+                    {item.stock}
+                  </span>
+                )}
               </div>
             </div>
           ))

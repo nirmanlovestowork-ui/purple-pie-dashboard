@@ -42,8 +42,8 @@ export const generateInvoice = (order: any) => {
   const tableData = (order.items || []).map((item: any) => [
     item.name || 'Unknown Item',
     item.qty || item.quantity || 1,
-    `Rs. ${Number(item.price || 0).toFixed(2)}`,
-    `Rs. ${Number((item.price || 0) * (item.qty || item.quantity || 1)).toFixed(2)}`
+    `₹${Number(item.price || 0).toFixed(2)}`,
+    `₹${Number((item.price || 0) * (item.qty || item.quantity || 1)).toFixed(2)}`
   ]);
 
   autoTable(doc, {
@@ -73,7 +73,7 @@ export const generateInvoice = (order: any) => {
   doc.setTextColor(...textColor);
   
   const grandTotal = order.grandTotal || order.totalAmount || 0;
-  doc.text(`Grand Total: Rs. ${Number(grandTotal).toFixed(2)}`, doc.internal.pageSize.getWidth() - 14, finalY + 10, { align: 'right' });
+  doc.text(`Grand Total: ₹${Number(grandTotal).toFixed(2)}`, doc.internal.pageSize.getWidth() - 14, finalY + 10, { align: 'right' });
 
   // Footer
   doc.setFontSize(10);

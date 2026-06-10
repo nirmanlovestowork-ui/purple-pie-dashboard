@@ -6,6 +6,7 @@ import { db } from '../firebase';
 import { collection, query, getDocs, where, doc, updateDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { cn } from '../lib/utils';
 import { handleFirestoreError, OperationType } from '../lib/firebaseUtils';
+import BluetoothPrinterButton from './BluetoothPrinterButton';
 
 interface NewOrderModalProps {
   isOpen: boolean;
@@ -233,6 +234,11 @@ export default function NewOrderModal({ isOpen, onClose, onSuccess, editMode = f
       return;
     }
 
+    if (!editMode && !invoiceNumber) {
+      showToast("Invoice number is not generated yet. Please wait or refresh the page.", "error");
+      return;
+    }
+
     // Check inventory stock before submitting
     for (const item of items) {
       if (item.id) {
@@ -308,17 +314,18 @@ export default function NewOrderModal({ isOpen, onClose, onSuccess, editMode = f
           source: 'Offline',
           store,
           paymentMethod: paymentMethod,
-          subtotal: Number(subtotal),
-          discount: Number(discount),
-          grandTotal: Number(grandTotal),
+          subtotal: Number(subtotal) || 0,
+          discount: Number(discount) || 0,
+          grandTotal: Number(grandTotal) || 0,
           isScheduled: false,
-          items: items.map(i => ({ name: i.name, qty: i.quantity, price: i.price, subtotal: i.price * i.quantity })),
+          items: items.map(i => ({ name: i.name, qty: i.quantity, price: Number(i.price) || 0, subtotal: (Number(i.price) || 0) * i.quantity })),
           timestamp: serverTimestamp(),
           createdAt: serverTimestamp()
         };
 
         // Save to Firestore
-        await setDoc(doc(db, 'orders', invoiceNumber), payload);
+        const newOrderRef = doc(db, 'orders', invoiceNumber);
+        await setDoc(newOrderRef, payload);
 
         // Update inventory
         for (const item of items) {
@@ -350,6 +357,7 @@ export default function NewOrderModal({ isOpen, onClose, onSuccess, editMode = f
         onSuccess();
       }
     } catch (e) {
+      console.error("Failed to commit order: ", e);
       if (editMode) {
         handleFirestoreError(e, OperationType.UPDATE, 'orders');
       } else {
@@ -389,7 +397,7 @@ export default function NewOrderModal({ isOpen, onClose, onSuccess, editMode = f
             className="drawer-content !max-w-[100%] md:!max-w-[100%] lg:!max-w-[45%]"
           >
             {completedOrder ? (
-              <div className="flex flex-col h-full bg-white print-receipt-container">
+              <div className="flex flex-col h-full bg-[#f0f0f0] print-receipt-container">
                 <div className="drawer-header !bg-green-600 print-hidden">
                   <div>
                     <h2 className="text-2xl font-bold font-headline text-white">Order Success!</h2>
@@ -400,8 +408,8 @@ export default function NewOrderModal({ isOpen, onClose, onSuccess, editMode = f
                   </button>
                 </div>
                 
-                <div className="flex-1 overflow-y-auto p-4 md:p-8 flex justify-center bg-[#f0f0f0] print:bg-white print:p-0">
-                  <div className="w-full max-w-[320px] bg-white p-6 shadow-xl relative mt-4 mb-8 receipt-edges print:shadow-none print:m-0 print:w-full print:max-w-full font-mono text-gray-800">
+                <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8 bg-[#f0f0f0] print:bg-white print:p-0">
+                  <div className="mx-auto w-full max-w-[320px] bg-white px-6 py-8 shadow-xl relative mt-4 mb-8 receipt-edges print:shadow-none print:m-0 print:w-full print:max-w-full font-mono text-gray-800 h-max min-h-max">
                     <div className="text-center pb-4">
                       <h1 className="font-bold text-2xl uppercase tracking-wider mb-1 text-black ">{completedOrder.store || 'THE PURPLE PIE'}</h1>
                       <p className="text-xs text-gray-600">Premium Cakes & Bakes</p>
@@ -482,17 +490,18 @@ export default function NewOrderModal({ isOpen, onClose, onSuccess, editMode = f
                       <img 
                         src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(completedOrder.invoiceNo)}`} 
                         alt="QR Code" 
-                        className="w-16 h-16 mx-auto mt-4 opacity-80 mix-blend-multiply print:opacity-100"
+                        className="w-16 h-16 mx-auto mt-4 opacity-80 print:opacity-100"
                         crossOrigin="anonymous"
                       />
                     </div>
                   </div>
                 </div>
 
-                <div className="drawer-footer flex gap-3 print-hidden">
+                <div className="drawer-footer !bg-[#f0f0f0] border-t-0 flex gap-3 print-hidden relative">
+                  <BluetoothPrinterButton order={completedOrder} />
                   <button 
                     onClick={handlePrint}
-                    className="flex-1 py-4 font-bold rounded-xl transition-all border-2 border-primary text-primary hover:bg-primary/5 active:scale-[0.98] flex items-center justify-center gap-2"
+                    className="flex-1 py-4 font-bold rounded-xl transition-all border-2 border-primary text-primary hover:bg-primary/5 active:scale-[0.98] flex items-center justify-center gap-2 bg-white"
                   >
                     Print Bill
                   </button>

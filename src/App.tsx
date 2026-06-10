@@ -37,31 +37,31 @@ function DashboardHome({ orders, todayStats, isAdmin, showToast, setIsScheduledM
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         {/* Card 1: Today's Revenue */}
-        <div className="bg-white p-6 rounded-2xl border border-primary/5 shadow-sm flex items-center gap-4">
+        <div className="bg-white p-6 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.05)] flex items-center gap-4">
           <div className="p-3 bg-sidebar/5 rounded-xl text-sidebar">
             <ShoppingBag size={24} />
           </div>
           <div>
-            <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Today's Revenue</h4>
+            <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest">Today's Revenue</h4>
             <p className="text-2xl font-bold text-gray-900">₹{todayStats.revenue % 1 !== 0 ? todayStats.revenue.toFixed(2) : todayStats.revenue}</p>
           </div>
         </div>
 
         {/* Card 2: Today's Orders */}
-        <div className="bg-white p-6 rounded-2xl border border-primary/5 shadow-sm flex items-center gap-4">
+        <div className="bg-white p-6 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.05)] flex items-center gap-4">
           <div className="p-3 bg-amber-50 rounded-xl text-accent-gold">
             <TrendingUp size={24} />
           </div>
           <div>
-            <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Today's Orders</h4>
+            <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest">Today's Orders</h4>
             <p className="text-2xl font-bold text-gray-900">{todayStats.orders}</p>
           </div>
         </div>
 
         {/* Card 3: Top Sellers */}
-        <div className="bg-white p-6 rounded-2xl border border-primary/5 shadow-sm flex flex-col min-h-[140px]">
+        <div className="bg-white p-6 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.05)] flex flex-col min-h-[140px]">
           <div className="flex items-center justify-between mb-4">
-            <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Top Sellers</h4>
+            <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest">Top Sellers</h4>
             <BarChart3 size={16} className="text-gray-300" />
           </div>
           <div className="flex-1 flex flex-col justify-center">
@@ -73,13 +73,13 @@ function DashboardHome({ orders, todayStats, isAdmin, showToast, setIsScheduledM
       {/* Detailed Sections below */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-8 mt-6 md:mt-8">
         <div className="md:col-span-8">
-          <div className="bg-white p-5 md:p-8 rounded-2xl border border-primary/5 shadow-sm overflow-hidden">
+          <div className="bg-white p-6 md:p-8 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.05)] overflow-hidden">
             <h4 className="font-headline text-lg md:text-xl font-bold text-gray-900 mb-4 md:mb-6">Upcoming Orders</h4>
             <OrdersTable filterToday={true} />
           </div>
         </div>
         <div className="md:col-span-4">
-          <div className="bg-white p-5 md:p-8 rounded-2xl border border-primary/5 shadow-sm h-full overflow-hidden">
+          <div className="bg-white p-6 md:p-8 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.05)] h-full overflow-hidden">
             <h4 className="font-headline text-lg md:text-xl font-bold text-gray-900 mb-4 md:mb-6">Inventory Status</h4>
             <InventoryManagement compact={true} />
           </div>
