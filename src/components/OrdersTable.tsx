@@ -6,6 +6,7 @@ import { cn, formatTimestamp, parseDateTime } from '../lib/utils';
 import { Loader2, ShoppingBag, Lock, CheckCircle, MessageCircle } from 'lucide-react';
 import { handleFirestoreError, OperationType, logActivity } from '../lib/firebaseUtils';
 import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/AuthContext';
 
 interface Order {
   id: string;
@@ -34,8 +35,9 @@ interface Order {
 
 export default function OrdersTable({ filterToday = false }: { filterToday?: boolean }) {
   const [orders, setOrders] = useState<Order[]>([]);
+  const { isAllowed } = useAuth();
+  const isAdmin = isAllowed;
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
   const { showToast } = useToast();
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -91,14 +93,6 @@ export default function OrdersTable({ filterToday = false }: { filterToday?: boo
       showToast("Failed to mark order as completed.", "error");
     }
   };
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setIsAdmin(['heynirman@gmail.com', 'thepurplepie.business@gmail.com', 'contact.to.tts@gmail.com'].includes(user?.email || ''));
-      if (!user) setLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
 
   useEffect(() => {
     if (!isAdmin) {

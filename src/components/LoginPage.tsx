@@ -1,9 +1,27 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
 
 export default function LoginPage() {
-  const { signInWithGoogle } = useAuth();
+  const { signInWithGoogle, signInWithCredentials } = useAuth();
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  const handleCredentialLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    
+    if (!username || !password) {
+      setError('Please enter both username and password.');
+      return;
+    }
+
+    const success = await signInWithCredentials(username, password);
+    if (!success) {
+      setError('Invalid username or password.');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center p-4">
@@ -15,6 +33,36 @@ export default function LoginPage() {
         <h1 className="text-3xl font-extrabold text-[#4A148C] mb-2 font-headline tracking-tight">The Purple Pie</h1>
         <p className="text-gray-500 font-medium mb-8">Admin Dashboard</p>
         
+        <form onSubmit={handleCredentialLogin} className="flex flex-col gap-4 mb-6">
+          {error && <p className="text-red-500 text-sm">{error}</p>}
+          <input
+            type="text"
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="w-full border border-gray-300 rounded-[12px] px-4 py-3 outline-none focus:border-[#4A148C] focus:ring-1 focus:ring-[#4A148C]"
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full border border-gray-300 rounded-[12px] px-4 py-3 outline-none focus:border-[#4A148C] focus:ring-1 focus:ring-[#4A148C]"
+          />
+          <button 
+            type="submit"
+            className="w-full bg-[#4A148C] text-white px-6 py-3 rounded-[12px] font-medium hover:bg-[#3b1070] transition-colors shadow-sm"
+          >
+            Sign in
+          </button>
+        </form>
+
+        <div className="flex items-center gap-4 mb-6">
+          <div className="h-px bg-gray-200 flex-1"></div>
+          <span className="text-gray-400 text-sm font-medium">OR</span>
+          <div className="h-px bg-gray-200 flex-1"></div>
+        </div>
+
         <button 
           onClick={signInWithGoogle}
           className="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 text-gray-700 px-6 py-3 rounded-[12px] font-medium hover:bg-gray-50 transition-colors shadow-sm"

@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import BluetoothPrinterButton from './BluetoothPrinterButton';
 import NewOrderModal from './NewOrderModal';
 import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/AuthContext';
 import { generateInvoice } from '../utils/pdfGenerator';
 
 interface OrderItem {
@@ -47,13 +48,14 @@ interface Order {
 
 export default function OrdersHistory() {
   const { showToast } = useToast();
+  const { isAllowed } = useAuth();
+  const isAdmin = isAllowed;
   const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [isCleaning, setIsCleaning] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
@@ -158,14 +160,6 @@ const confirmDelete = async () => {
       showToast("Failed to mark order as completed.", "error");
     }
   };
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setIsAdmin(['heynirman@gmail.com', 'thepurplepie.business@gmail.com', 'contact.to.tts@gmail.com'].includes(user?.email || ''));
-      if (!user) setLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
 
   useEffect(() => {
     if (!isAdmin) {

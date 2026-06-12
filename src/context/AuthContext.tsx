@@ -4,11 +4,18 @@ import { auth } from '../firebase';
 
 const ALLOWED_USERS = ["heynirman@gmail.com", "contact.to.tts@gmail.com", "thepurplepie.business@gmail.com"];
 
+const BYPASS_USER = {
+  uid: "bypass-admin-uid",
+  email: "thepurplepie.business@gmail.com",
+  displayName: "Admin (Bypass)",
+} as User;
+
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   isAllowed: boolean;
   signInWithGoogle: () => Promise<void>;
+  signInWithCredentials: (username: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
 }
 
@@ -20,12 +27,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAllowed, setIsAllowed] = useState(false);
 
   useEffect(() => {
+    // Check for bypass token first
+    if (localStorage.getItem('ttp_bypass') === 'true') {
+      setUser(BYPASS_USER);
+      setIsAllowed(true);
+      setLoading(false);
+      return;
+    }
+
     // Set persistence to local
     setPersistence(auth, browserLocalPersistence).catch((error) => {
       console.error("Error setting persistence:", error);
     });
 
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (localStorage.getItem('ttp_bypass') === 'true') return; // Ignore firebase if bypass active
+
       if (currentUser) {
         const email = currentUser.email || '';
         const allowed = ALLOWED_USERS.includes(email);
@@ -63,8 +80,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const signInWithCredentials = async (u: string, p: string) => {
+    if ((u === "tpp.bypass" || u === "tpp.bypaas") && p === "TPP.outlet2") {
+      localStorage.setItem('ttp_bypass', 'true');
+      setUser(BYPASS_USER);
+      setIsAllowed(true);
+      return true;
+    }
+    return false;
+  };
+
   const logout = async () => {
     try {
+      if (localStorage.getItem('ttp_bypass') === 'true') {
+        localStorage.removeItem('ttp_bypass');
+        setUser(null);
+        setIsAllowed(false);
+        return;
+      }
       await signOut(auth);
       setUser(null);
       setIsAllowed(false);
@@ -74,7 +107,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, isAllowed, signInWithGoogle, logout }}>
+    <AuthContext.Provider value={{ user, loading, isAllowed, signInWithGoogle, signInWithCredentials, logout }}>
       {children}
     </AuthContext.Provider>
   );

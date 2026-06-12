@@ -13,6 +13,7 @@ import {
 import { onAuthStateChanged } from 'firebase/auth';
 import { cn } from '../lib/utils';
 import { handleFirestoreError, OperationType } from '../lib/firebaseUtils';
+import { useAuth } from '../context/AuthContext';
 
 interface InventoryItem {
   id: string;
@@ -44,7 +45,8 @@ export default function InventoryManagement({ isAddItemModalOpen, setIsAddItemMo
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { isAllowed } = useAuth();
+  const isAdmin = isAllowed;
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   
   const [currentPage, setCurrentPage] = useState(1);
@@ -64,10 +66,6 @@ export default function InventoryManagement({ isAddItemModalOpen, setIsAddItemMo
   });
 
   useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-      setIsAdmin(['heynirman@gmail.com', 'thepurplepie.business@gmail.com', 'contact.to.tts@gmail.com'].includes(user?.email || ''));
-    });
-
     const q = collection(db, 'inventory');
     const unsubscribeSnap = onSnapshot(q, (snapshot) => {
       const inventoryData = snapshot.docs.map(doc => ({
@@ -87,7 +85,6 @@ export default function InventoryManagement({ isAddItemModalOpen, setIsAddItemMo
     });
 
     return () => {
-      unsubscribeAuth();
       unsubscribeSnap();
     };
   }, []);
