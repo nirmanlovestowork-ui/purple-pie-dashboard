@@ -313,9 +313,6 @@ export default function NewOrderModal({ isOpen, onClose, onSuccess, editMode = f
         onSuccess();
         onClose();
       } else {
-        // Submit to Apps Script
-        const url = (import.meta as any).env.VITE_APPS_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbyjsvCGt-8OkmeYoIYtfVNNJBUh-efJFG3W5C_QRg_SuzK0BCkCbMWT_f0Xb6FDmVw/exec';
-        
         const now = new Date();
         const dateStr = now.toLocaleDateString('en-GB'); // DD/MM/YYYY
         const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
@@ -356,20 +353,6 @@ export default function NewOrderModal({ isOpen, onClose, onSuccess, editMode = f
               stock: newStock
             });
           }
-        }
-
-        // Submit to Apps Script if configured
-        if (url) {
-          fetch(url, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(payload)
-          }).catch(fetchErr => {
-            console.error("Failed to submit to Apps Script:", fetchErr);
-          });
         }
         
         setCompletedOrder(payload);
