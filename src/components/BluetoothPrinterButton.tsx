@@ -44,7 +44,8 @@ export default function BluetoothPrinterButton({ order, variant = 'default' }: P
     try {
       if (!cachedLogoEscPos) {
         const logoImg = await loadImage('/bw_logo.jpeg');
-        cachedLogoEscPos = getImageEscPos(logoImg, 300);
+        // Reduce logo size (240px instead of 300px) to speed up printing
+        cachedLogoEscPos = getImageEscPos(logoImg, 240);
       }
       parts.push(cachedLogoEscPos);
       parts.push(encode(NEWLINE));
@@ -130,7 +131,6 @@ export default function BluetoothPrinterButton({ order, variant = 'default' }: P
     }
     
     receipt += NEWLINE;
-    parts.push(encode(receipt));
 
     // Print Footer
     receipt += "--------------------------------" + NEWLINE;
@@ -206,7 +206,8 @@ export default function BluetoothPrinterButton({ order, variant = 'default' }: P
         
         for (const service of services) {
           const characteristics = await service.getCharacteristics();
-          writeChar = characteristics.find(c => c.properties.write || c.properties.writeWithoutResponse) || null;
+          writeChar = characteristics.find(c => c.properties.writeWithoutResponse) ||
+                      characteristics.find(c => c.properties.write) || null;
           if (writeChar) break;
         }
 
@@ -220,7 +221,7 @@ export default function BluetoothPrinterButton({ order, variant = 'default' }: P
       const payload = await generateReceiptPayload();
 
       // Write in chunks due to BLE limits
-      const chunkSize = 200;
+      const chunkSize = 250;
       for (let i = 0; i < payload.length; i += chunkSize) {
         const chunk = payload.slice(i, i + chunkSize);
         if (writeChar.properties.writeWithoutResponse) {

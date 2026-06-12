@@ -325,8 +325,7 @@ export default function NewOrderModal({ isOpen, onClose, onSuccess, editMode = f
         };
 
         // Save to Firestore
-        const newOrderRef = doc(db, 'orders', invoiceNumber);
-        await setDoc(newOrderRef, payload);
+        await addDoc(collection(db, 'orders'), payload);
 
         // Update inventory
         for (const item of items) {
@@ -339,12 +338,6 @@ export default function NewOrderModal({ isOpen, onClose, onSuccess, editMode = f
             });
           }
         }
-
-        // Save to Firestore
-        await addDoc(collection(db, 'orders'), {
-          ...payload,
-          createdAt: serverTimestamp()
-        });
 
         // Submit to Apps Script if configured
         if (url) {
