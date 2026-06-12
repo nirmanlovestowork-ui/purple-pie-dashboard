@@ -355,6 +355,24 @@ export default function NewOrderModal({ isOpen, onClose, onSuccess, editMode = f
           }
         }
         
+        // Submit to Apps Script 
+        const url = (import.meta as any).env.VITE_APPS_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbyjsvCGt-8OkmeYoIYtfVNNJBUh-efJFG3W5C_QRg_SuzK0BCkCbMWT_f0Xb6FDmVw/exec';
+
+        if (url) {
+          fetch(url, {
+            method: 'POST',
+            mode: 'no-cors',
+            redirect: 'error',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload)
+          }).catch(fetchErr => {
+            // It is expected to throw an error on redirect if redirect: 'error' is used
+            console.log("Apps script submitted (redirect prevented)");
+          });
+        }
+        
         setCompletedOrder(payload);
         onSuccess();
       }
