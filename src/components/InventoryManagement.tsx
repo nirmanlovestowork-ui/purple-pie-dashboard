@@ -65,7 +65,7 @@ export default function InventoryManagement({ isAddItemModalOpen, setIsAddItemMo
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-      setIsAdmin(['heynirman@gmail.com', 'thepurplepie.business@gmail.com'].includes(user?.email || ''));
+      setIsAdmin(['heynirman@gmail.com', 'thepurplepie.business@gmail.com', 'contact.to.tts@gmail.com'].includes(user?.email || ''));
     });
 
     const q = collection(db, 'inventory');

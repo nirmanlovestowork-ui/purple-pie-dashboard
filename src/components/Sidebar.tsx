@@ -58,7 +58,7 @@ export default function Sidebar({ currentView, onNavigate, isMobileMenuOpen, set
         <div>
           <div className="px-8 mb-12 flex flex-col items-center gap-3 mt-4 md:mt-0">
             <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center overflow-hidden border-2 border-white/20 shadow-lg">
-              <img src="/purple pie logo.jpg" alt="The Purple Pie Logo" className="w-full h-full object-cover" />
+              <img src="/bw_logo.jpeg" alt="The Purple Pie Logo" className="w-full h-full object-cover" />
             </div>
             <p className="text-[10px] uppercase tracking-[0.3em] text-white font-semibold text-center mt-1">Admin Dashboard</p>
           </div>

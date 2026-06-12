@@ -94,7 +94,7 @@ export default function OrdersTable({ filterToday = false }: { filterToday?: boo
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setIsAdmin(['heynirman@gmail.com', 'thepurplepie.business@gmail.com'].includes(user?.email || ''));
+      setIsAdmin(['heynirman@gmail.com', 'thepurplepie.business@gmail.com', 'contact.to.tts@gmail.com'].includes(user?.email || ''));
       if (!user) setLoading(false);
     });
     return () => unsubscribe();

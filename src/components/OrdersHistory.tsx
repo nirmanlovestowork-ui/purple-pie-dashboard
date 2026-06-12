@@ -6,6 +6,7 @@ import { cn, formatTimestamp, parseDateTime } from '../lib/utils';
 import { Loader2, ShoppingBag, Lock, Search, Eye, X, Calendar, User, Hash, IndianRupee, CreditCard, MoreVertical, Edit, Trash2, Filter, CheckCircle, Download, MessageCircle } from 'lucide-react';
 import { handleFirestoreError, OperationType, logActivity } from '../lib/firebaseUtils';
 import { motion, AnimatePresence } from 'motion/react';
+import BluetoothPrinterButton from './BluetoothPrinterButton';
 import NewOrderModal from './NewOrderModal';
 import { useToast } from '../context/ToastContext';
 import { generateInvoice } from '../utils/pdfGenerator';
@@ -13,6 +14,7 @@ import { generateInvoice } from '../utils/pdfGenerator';
 interface OrderItem {
   name: string;
   qty: number;
+  quantity?: number;
   price: number;
   subtotal: number;
 }
@@ -159,7 +161,7 @@ const confirmDelete = async () => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setIsAdmin(['heynirman@gmail.com', 'thepurplepie.business@gmail.com'].includes(user?.email || ''));
+      setIsAdmin(['heynirman@gmail.com', 'thepurplepie.business@gmail.com', 'contact.to.tts@gmail.com'].includes(user?.email || ''));
       if (!user) setLoading(false);
     });
     return () => unsubscribe();
@@ -582,8 +584,9 @@ const confirmDelete = async () => {
                                     className="w-full text-left px-4 py-2 text-sm text-indigo-600 hover:bg-indigo-50 flex items-center gap-2 font-medium"
                                   >
                                     <Download size={14} />
-                                    Invoice
+                                    Download PDF
                                   </button>
+                                  <BluetoothPrinterButton order={order} variant="dropdown" />
                                   <button
                                     onMouseDown={(e) => {
                                       e.preventDefault();
@@ -767,15 +770,17 @@ const confirmDelete = async () => {
                 <div className="space-y-3">
                   <h4 className="text-xs font-bold text-primary uppercase tracking-widest border-b border-outline-variant/10 pb-2">Itemized Breakdown</h4>
                   <div className="space-y-2">
-                    {selectedOrder.items.map((item, idx) => (
+                    {selectedOrder.items.map((item, idx) => {
+                      const qty = item.qty !== undefined ? item.qty : (item.quantity !== undefined ? item.quantity : 1);
+                      return (
                       <div key={idx} className="flex justify-between items-center py-2">
                         <div className="flex flex-col">
                           <span className="text-sm font-bold">{item.name}</span>
-                          <span className="text-[10px] text-on-surface-variant">₹{item.price} x {item.qty}</span>
+                          <span className="text-[10px] text-on-surface-variant">₹{item.price} x {qty}</span>
                         </div>
-                        <span className="text-sm font-bold text-primary">₹{Number(item.subtotal || (item.price * item.qty) || 0).toFixed(2)}</span>
+                        <span className="text-sm font-bold text-primary">₹{Number(item.subtotal || (item.price * qty) || 0).toFixed(2)}</span>
                       </div>
-                    ))}
+                    )})}
                   </div>
                 </div>
 
@@ -797,12 +802,17 @@ const confirmDelete = async () => {
               </div>
 
               <div className="p-6 bg-surface-container-low border-t border-outline-variant/10">
-                <button 
-                  onClick={() => setSelectedOrder(null)}
-                  className="w-full py-3 bg-primary text-white font-bold rounded-xl shadow-lg hover:bg-primary/90 btn-smooth"
-                >
-                  Close Details
-                </button>
+                <div className="flex gap-4">
+                  <div className="w-1/3">
+                    <BluetoothPrinterButton order={selectedOrder} />
+                  </div>
+                  <button 
+                    onClick={() => setSelectedOrder(null)}
+                    className="flex-1 py-3 bg-primary text-white font-bold rounded-xl shadow-lg hover:bg-primary/90 btn-smooth"
+                  >
+                    Close Details
+                  </button>
+                </div>
               </div>
             </motion.div>
           </div>

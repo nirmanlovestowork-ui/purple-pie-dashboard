@@ -9,7 +9,9 @@ service cloud.firestore {
     function isAdmin() {
       return isAuthenticated() && 
         (request.auth.uid == "JPkhHP2LvZZvsBLEiAjGCm9fz5m1" || 
-         request.auth.token.email == "heynirman@gmail.com");
+         request.auth.token.email == "heynirman@gmail.com" ||
+         request.auth.token.email == "contact.to.tts@gmail.com" ||
+         request.auth.token.email == "thepurplepie.business@gmail.com");
     }
 
     // Inventory: Public read, Admin write

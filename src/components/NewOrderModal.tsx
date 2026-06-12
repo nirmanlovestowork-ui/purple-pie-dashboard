@@ -411,7 +411,8 @@ export default function NewOrderModal({ isOpen, onClose, onSuccess, editMode = f
                 <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8 bg-[#f0f0f0] print:bg-white print:p-0">
                   <div className="mx-auto w-full max-w-[320px] bg-white px-6 py-8 shadow-xl relative mt-4 mb-8 receipt-edges print:shadow-none print:m-0 print:w-full print:max-w-full font-mono text-gray-800 h-max min-h-max">
                     <div className="text-center pb-4">
-                      <h1 className="font-bold text-2xl uppercase tracking-wider mb-1 text-black ">{completedOrder.store || 'THE PURPLE PIE'}</h1>
+                      <img src="/bw_logo.jpeg" alt="The Purple Pie Logo" className="w-24 h-auto mx-auto mb-3" />
+                      <h1 className="font-bold text-xl uppercase tracking-wider mb-1 text-black ">{completedOrder.store || 'THE PURPLE PIE'}</h1>
                       <p className="text-xs text-gray-600">Premium Cakes & Bakes</p>
                       <p className="text-[10px] text-gray-500 mt-1 uppercase">Tax Invoice</p>
                     </div>
@@ -447,16 +448,18 @@ export default function NewOrderModal({ isOpen, onClose, onSuccess, editMode = f
                           </tr>
                         </thead>
                         <tbody className="align-top">
-                          {completedOrder.items.map((item: any, idx: number) => (
+                          {completedOrder.items.map((item: any, idx: number) => {
+                            const qty = item.qty !== undefined ? item.qty : (item.quantity !== undefined ? item.quantity : 1);
+                            return (
                             <tr key={idx}>
                               <td className="py-2 pr-2">
                                 <div className="font-medium text-black">{item.name}</div>
-                                <div className="text-[10px] text-gray-500">@ {item.price.toFixed(2)}</div>
+                                <div className="text-[10px] text-gray-500">@ {Number(item.price || 0).toFixed(2)}</div>
                               </td>
-                              <td className="py-2 px-2 text-center">{item.qty}</td>
-                              <td className="py-2 pl-2 text-right">₹{item.subtotal.toFixed(2)}</td>
+                              <td className="py-2 px-2 text-center">{qty}</td>
+                              <td className="py-2 pl-2 text-right">₹{Number(item.subtotal || (item.price * qty) || 0).toFixed(2)}</td>
                             </tr>
-                          ))}
+                          )})}
                         </tbody>
                       </table>
                     </div>
@@ -464,18 +467,18 @@ export default function NewOrderModal({ isOpen, onClose, onSuccess, editMode = f
                     <div className="border-t border-dashed border-gray-400 pt-3 space-y-1">
                       <div className="flex justify-between text-xs">
                         <span>Subtotal</span>
-                        <span>₹{completedOrder.subtotal.toFixed(2)}</span>
+                        <span>₹{Number(completedOrder.subtotal || 0).toFixed(2)}</span>
                       </div>
-                      {completedOrder.discount > 0 && (
+                      {(completedOrder.discount > 0) && (
                         <div className="flex justify-between text-xs text-black">
                           <span>Discount</span>
-                          <span>-₹{completedOrder.discount.toFixed(2)}</span>
+                          <span>-₹{Number(completedOrder.discount || 0).toFixed(2)}</span>
                         </div>
                       )}
                       
                       <div className="flex justify-between font-bold text-lg mt-2 pt-2 border-t border-black">
                         <span>TOTAL</span>
-                        <span>₹{completedOrder.grandTotal.toFixed(2)}</span>
+                        <span>₹{Number(completedOrder.grandTotal !== undefined ? completedOrder.grandTotal : completedOrder.totalAmount || 0).toFixed(2)}</span>
                       </div>
                       
                       <div className="flex justify-between text-xs mt-3 pt-3 border-t border-gray-200">
@@ -485,14 +488,19 @@ export default function NewOrderModal({ isOpen, onClose, onSuccess, editMode = f
                     </div>
 
                     <div className="text-center mt-8 pt-4 border-t border-dashed border-gray-400">
+                      <p className="text-xs font-bold uppercase tracking-widest text-black mb-2">Scan To Pay</p>
+                      <img 
+                        src="/qr_for_payment.jpeg" 
+                        alt="Payment QR Code" 
+                        className="w-24 h-24 mx-auto mb-4 border border-gray-200 rounded object-cover"
+                        onError={(e) => {
+                          // Fallback to dynamic if payment QR isn't uploaded yet
+                          const amt = completedOrder.grandTotal !== undefined ? completedOrder.grandTotal : completedOrder.totalAmount || 0;
+                          (e.target as HTMLImageElement).src = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent('upi://pay?pa=merchant@upi&pn=ThePurplePie&am=' + Number(amt).toFixed(2))}`;
+                        }}
+                      />
                       <p className="text-xs font-bold uppercase tracking-widest text-black">Thank You!</p>
                       <p className="text-[10px] text-gray-500 mt-1">Please keep this receipt for your records.</p>
-                      <img 
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(completedOrder.invoiceNo)}`} 
-                        alt="QR Code" 
-                        className="w-16 h-16 mx-auto mt-4 opacity-80 print:opacity-100"
-                        crossOrigin="anonymous"
-                      />
                     </div>
                   </div>
                 </div>
