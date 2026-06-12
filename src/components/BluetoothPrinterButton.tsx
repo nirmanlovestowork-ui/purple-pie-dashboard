@@ -207,7 +207,9 @@ export default function BluetoothPrinterButton({ order, variant = 'default' }: P
         
         for (const service of services) {
           const characteristics = await service.getCharacteristics();
-          writeChar = characteristics.find(c => c.properties.write || c.properties.writeWithoutResponse) || null;
+          // Always prefer writeWithoutResponse. Many cheap POS printers hang indefinitely waiting for an ACK if you use 'write', causing it to never print at all.
+          writeChar = characteristics.find(c => c.properties.writeWithoutResponse) || 
+                      characteristics.find(c => c.properties.write) || null;
           if (writeChar) break;
         }
 
@@ -220,17 +222,19 @@ export default function BluetoothPrinterButton({ order, variant = 'default' }: P
 
       const payload = await generateReceiptPayload();
 
-      // Write in chunks due to BLE limits
-      // Some printers only support 512b MTU, so chunks of 250 are optimal.
-      const chunkSize = 250; 
+      // Write in chunks due to BLE limits.
+      // Small chunks (100 bytes) with a decent sleep (20ms) prevent printer buffer overruns.
+      // If the buffer overruns, the printer restarts and prints 2 bills or garbage.
+      const chunkSize = 100; 
       for (let i = 0; i < payload.length; i += chunkSize) {
         const chunk = payload.slice(i, i + chunkSize);
-        if (writeChar.properties.write) {
-           // writeValue waits for ACK, inherently providing flow control
-           await writeChar.writeValue(chunk);
-        } else if (writeChar.properties.writeWithoutResponse) {
+        
+        if (writeChar.properties.writeWithoutResponse) {
            await writeChar.writeValueWithoutResponse(chunk);
-           await new Promise(resolve => setTimeout(resolve, 5)); // Reduced manual delay to avoid printer timeout which could split bills
+           // 20ms delay allows the printer time to process the buffer and physically print
+           await new Promise(resolve => setTimeout(resolve, 20)); 
+        } else if (writeChar.properties.write) {
+           await writeChar.writeValue(chunk);
         }
       }
 
