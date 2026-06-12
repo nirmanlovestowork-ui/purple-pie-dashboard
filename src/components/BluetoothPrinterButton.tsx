@@ -43,9 +43,10 @@ export default function BluetoothPrinterButton({ order, variant = 'default' }: P
     // Try to load and add logo
     try {
       if (!cachedLogoEscPos) {
-        const logoImg = await loadImage('/bw_logo.jpeg');
-        // Reduce logo size (240px instead of 300px) to speed up printing
-        cachedLogoEscPos = getImageEscPos(logoImg, 240);
+        const logoUrl = window.location.origin + '/bw_logo.jpeg';
+        const logoImg = await loadImage(logoUrl);
+        // Reduce logo size (160px instead of 240px) to prevent BLE buffer drops
+        cachedLogoEscPos = getImageEscPos(logoImg, 160);
       }
       parts.push(cachedLogoEscPos);
       parts.push(encode(NEWLINE));
@@ -58,17 +59,17 @@ export default function BluetoothPrinterButton({ order, variant = 'default' }: P
     if (order && order.store) {
       receipt += BOLD_ON + order.store.toUpperCase() + BOLD_OFF + NEWLINE;
     }
-    receipt += "Premium Cakes & Bakes" + NEWLINE;
-    receipt += "Tax Invoice" + NEWLINE;
+    receipt += "Tankapani Road, BBSR" + NEWLINE;
+    receipt += "Treat Receipt" + NEWLINE;
     receipt += "--------------------------------" + NEWLINE;
     
     // Body
     receipt += ALIGN_LEFT;
     if (order) {
         receipt += `Date: ${order.date} ${order.time}${NEWLINE}`;
-        receipt += `Customer: ${order.customerName}${NEWLINE}`;
+        receipt += `Sweet Guest: ${order.customerName}${NEWLINE}`;
         receipt += "--------------------------------" + NEWLINE;
-        receipt += formatLine("Item", "Total");
+        receipt += formatLine("Your Indulgence", "Total");
         receipt += "--------------------------------" + NEWLINE;
         
         order.items?.forEach((item: any) => {
@@ -89,13 +90,13 @@ export default function BluetoothPrinterButton({ order, variant = 'default' }: P
         receipt += formatLine("TOTAL", `Rs. ${Number(totalAmount).toFixed(2)}`);
         receipt += BOLD_OFF;
         if (order.paymentMethod) {
-            receipt += formatLine("Payment", order.paymentMethod);
+            receipt += formatLine("Mode of Payment", order.paymentMethod);
         }
     } else {
         receipt += "Date: 10/06/2026 10:00 AM" + NEWLINE;
-        receipt += "Customer: John Doe" + NEWLINE;
+        receipt += "Sweet Guest: John Doe" + NEWLINE;
         receipt += "--------------------------------" + NEWLINE;
-        receipt += formatLine("Item", "Total");
+        receipt += formatLine("Your Indulgence", "Total");
         receipt += "--------------------------------" + NEWLINE;
         
         receipt += "Chocolate Truffle" + NEWLINE;
@@ -114,7 +115,7 @@ export default function BluetoothPrinterButton({ order, variant = 'default' }: P
     receipt += "--------------------------------" + NEWLINE;
     receipt += ALIGN_CENTER;
     
-    const footerMsg = "Thank you for choosing The Purple Pie! We hope our freshly baked treats add a touch of sweetness to your day.";
+    const footerMsg = "From your ovens to your heart, thank you for choosing The Purple Pie. Tag us @the.purplepie to get featured. #thepurplepie";
     const words = footerMsg.split(' ');
     let currentLine = '';
     

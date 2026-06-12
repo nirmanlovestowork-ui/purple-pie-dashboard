@@ -46,10 +46,12 @@ export default function NewOrderModal({ isOpen, onClose, onSuccess, editMode = f
   const [addressPin, setAddressPin] = useState('');
   const [store, setStore] = useState<string>('BRAHMESWARPATNA');
   const [completedOrder, setCompletedOrder] = useState<any>(null);
+  const submitLockRef = React.useRef(false);
 
   const isPinValid = addressPin === '' || /^\d{6}$/.test(addressPin);
 
   const resetForm = () => {
+    submitLockRef.current = false;
     setCustomerName('');
     setPhoneNumber('');
     setItems([{ id: '', name: '', price: 0, quantity: 1 }]);
@@ -213,7 +215,8 @@ export default function NewOrderModal({ isOpen, onClose, onSuccess, editMode = f
 
   const handleSubmit = async (e?: React.MouseEvent | React.FormEvent) => {
     if (e) e.preventDefault();
-    if (isSubmitting) return;
+    if (isSubmitting || submitLockRef.current) return;
+    submitLockRef.current = true;
     
     if (!customerName || items.length === 0 || items.some(i => !i.name.trim())) {
       showToast("Please fill in all required fields and add at least one item", "error");
@@ -364,6 +367,7 @@ export default function NewOrderModal({ isOpen, onClose, onSuccess, editMode = f
         showToast("Failed to record sale. Please try again.", "error");
       }
     } finally {
+      submitLockRef.current = false;
       setLoading(false);
       setIsSubmitting(false);
     }
