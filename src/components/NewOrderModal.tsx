@@ -220,26 +220,31 @@ export default function NewOrderModal({ isOpen, onClose, onSuccess, editMode = f
     
     if (!customerName || items.length === 0 || items.some(i => !i.name.trim())) {
       showToast("Please fill in all required fields and add at least one item", "error");
+      submitLockRef.current = false;
       return;
     }
 
     if (showAddress && addressPin && !isPinValid) {
       showToast("Please enter a valid 6-digit pincode", "error");
+      submitLockRef.current = false;
       return;
     }
 
     if (grandTotal <= 0) {
       showToast("Order total must be greater than 0", "error");
+      submitLockRef.current = false;
       return;
     }
 
     if (!store) {
       showToast("Please select a store to proceed", "error");
+      submitLockRef.current = false;
       return;
     }
 
     if (!editMode && !invoiceNumber) {
       showToast("Invoice number is not generated yet. Please wait or refresh the page.", "error");
+      submitLockRef.current = false;
       return;
     }
 
@@ -251,6 +256,7 @@ export default function NewOrderModal({ isOpen, onClose, onSuccess, editMode = f
           const currentStock = invItem.stock || 0;
           if (currentStock < item.quantity) {
             showToast(`Insufficient stock for ${item.name}. Available: ${currentStock}`, "error");
+            submitLockRef.current = false;
             return;
           }
         }
@@ -260,18 +266,28 @@ export default function NewOrderModal({ isOpen, onClose, onSuccess, editMode = f
     setIsSubmitting(true);
     setLoading(true);
     try {
-      // Add new items to inventory
+      // Add new items to inventory avoiding duplicates
       for (const item of items) {
         if (!item.id && item.name.trim()) {
-          const newInvDoc = doc(collection(db, 'inventory'));
-          await setDoc(newInvDoc, {
-            name: item.name.trim(),
-            price: Number(item.price) || 0,
-            maintainStock: false,
-            stock: 0,
-            createdAt: serverTimestamp()
-          });
-          item.id = newInvDoc.id;
+          const itemNameTrimmed = item.name.trim();
+          const existingItem = inventory.find(i => i.name.toLowerCase() === itemNameTrimmed.toLowerCase());
+          
+          if (existingItem) {
+             item.id = existingItem.id;
+          } else {
+             const newInvDoc = doc(collection(db, 'inventory'));
+             await setDoc(newInvDoc, {
+               name: itemNameTrimmed,
+               price: Number(item.price) || 0,
+               maintainStock: false,
+               stock: 0,
+               createdAt: serverTimestamp()
+             });
+             item.id = newInvDoc.id;
+             
+             // Optimistically push to inventory state to prevent duplicates in current session
+             setInventory(prev => [...prev, { id: newInvDoc.id, name: itemNameTrimmed, price: Number(item.price)||0, maintainStock: false, stock: 0 }]);
+          }
         }
       }
       if (editMode && initialData?.id) {
@@ -845,6 +861,7 @@ export default function NewOrderModal({ isOpen, onClose, onSuccess, editMode = f
             {/* Footer */}
             <div className="drawer-footer">
               <button 
+                type="button"
                 onClick={handleSubmit}
                 disabled={isSubmitting || !isPhoneValid || (showAddress && !isPinValid)}
                 className={cn(

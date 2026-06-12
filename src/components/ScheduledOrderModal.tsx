@@ -31,25 +31,30 @@ export default function ScheduledOrderModal({ isOpen, onClose }: ScheduledOrderM
 
   const handleSave = async () => {
     if (isSubmitting || isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setError('');
+    
     if (customerPhone && !/^\d{10}$/.test(customerPhone)) {
       setError('Phone number must be exactly 10 digits or left blank.');
+      isSubmittingRef.current = false;
       return;
     }
     if (!customerName || !deliveryDate || !deliveryTime) {
       setError('Please fill in Name, Date, and Time.');
+      isSubmittingRef.current = false;
       return;
     }
     if (!store) {
       setError('Please select a store.');
+      isSubmittingRef.current = false;
       return;
     }
     if (totalAmount <= 0) {
       setError('Total amount must be greater than 0.');
+      isSubmittingRef.current = false;
       return;
     }
 
-    isSubmittingRef.current = true;
     setIsSubmitting(true);
     try {
       // Format date to DD/MM/YYYY
@@ -282,6 +287,7 @@ export default function ScheduledOrderModal({ isOpen, onClose }: ScheduledOrderM
               Cancel
             </button>
             <button 
+              type="button"
               onClick={handleSave}
               disabled={isSubmitting}
               className="px-6 py-2.5 rounded-xl font-bold bg-primary text-white hover:bg-primary/90 transition-colors shadow-sm disabled:opacity-50 flex items-center gap-2"
