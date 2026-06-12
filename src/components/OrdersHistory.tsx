@@ -74,13 +74,14 @@ export default function OrdersHistory() {
   const [filterDate, setFilterDate] = useState('All');
   const [filterSource, setFilterSource] = useState('All');
   const [filterPayment, setFilterPayment] = useState('All');
+  const [filterStore, setFilterStore] = useState('All');
   
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, filterDate, filterSource, filterPayment]);
+  }, [searchTerm, filterDate, filterSource, filterPayment, filterStore]);
   
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -273,8 +274,9 @@ const confirmDelete = async () => {
     const matchesDate = isDateMatch(order.date, filterDate);
     const matchesSource = filterSource === 'All' || (order.source || 'Offline').toUpperCase() === filterSource;
     const matchesPayment = filterPayment === 'All' || (order.paymentMethod || 'CASH').toUpperCase() === filterPayment;
+    const matchesStore = filterStore === 'All' || (order.store || 'BRAHMESWARPATNA').toUpperCase() === filterStore.toUpperCase();
 
-    return matchesSearch && matchesDate && matchesSource && matchesPayment;
+    return matchesSearch && matchesDate && matchesSource && matchesPayment && matchesStore;
   });
 
   const cleanupDatabase = async () => {
@@ -948,6 +950,20 @@ const confirmDelete = async () => {
                     <option value="UPI">UPI</option>
                     <option value="PREPAID">Prepaid</option>
                     <option value="CASH ON DELIVERY">Cash on Delivery</option>
+                  </select>
+                </div>
+
+                {/* Store Filter */}
+                <div className="space-y-3">
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Store</label>
+                  <select
+                    value={filterStore}
+                    onChange={(e) => setFilterStore(e.target.value)}
+                    className="w-full p-3 bg-surface-container-low border border-outline-variant/20 rounded-xl text-sm font-bold text-on-surface focus:ring-2 focus:ring-primary/20 outline-none"
+                  >
+                    <option value="All">All Stores</option>
+                    <option value="BRAHMESWARPATNA">BRAHMESWARPATNA</option>
+                    <option value="BYPASS FOOD COURT">BYPASS FOOD COURT</option>
                   </select>
                 </div>
               </div>

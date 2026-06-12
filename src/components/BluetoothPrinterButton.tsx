@@ -7,7 +7,6 @@ let cachedPrinterDevice: BluetoothDevice | null = null;
 let cachedWriteChar: BluetoothRemoteGATTCharacteristic | null = null;
 
 let cachedLogoEscPos: Uint8Array | null = null;
-let cachedQrEscPos: Uint8Array | null = null;
 
 interface PrintOrderProps {
   order?: any;
@@ -55,6 +54,9 @@ export default function BluetoothPrinterButton({ order, variant = 'default' }: P
     }
 
     let receipt = "";
+    if (order && order.store) {
+      receipt += BOLD_ON + order.store.toUpperCase() + BOLD_OFF + NEWLINE;
+    }
     receipt += "Premium Cakes & Bakes" + NEWLINE;
     receipt += "Tax Invoice" + NEWLINE;
     receipt += "--------------------------------" + NEWLINE;
@@ -130,30 +132,11 @@ export default function BluetoothPrinterButton({ order, variant = 'default' }: P
     receipt += NEWLINE;
     parts.push(encode(receipt));
 
-    // Try to load and add QR code
-    try {
-      if (!cachedQrEscPos) {
-        let qrUrl = '/qr_for_payment.jpeg';
-        let qrImg: HTMLImageElement;
-        
-        try {
-          qrImg = await loadImage(qrUrl);
-        } catch (localErr) {
-          // Fallback to dynamic API if file doesn't exist
-          const amount = order.grandTotal !== undefined ? order.grandTotal : (order.totalAmount || 0);
-          const paymentData = order ? `upi://pay?pa=merchant@upi&pn=ThePurplePie&am=${Number(amount).toFixed(2)}` : 'upi://pay?pa=merchant@upi';
-          qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(paymentData)}`;
-          qrImg = await loadImage(qrUrl);
-        }
-        
-        cachedQrEscPos = getImageEscPos(qrImg, 240); // smaller width for QR
-      }
-      
-      parts.push(cachedQrEscPos);
-      parts.push(encode(NEWLINE));
-    } catch (e) {
-      console.warn('QR image failed to load:', e);
-    }
+    // Print Footer
+    receipt += "--------------------------------" + NEWLINE;
+    receipt += "Thank You!" + NEWLINE;
+    
+    parts.push(encode(receipt));
 
     parts.push(encode(NEWLINE + NEWLINE + NEWLINE)); // Feed extra lines
     

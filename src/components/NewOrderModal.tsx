@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { X, Plus, Minus, Trash2, Search, CreditCard, Banknote, Loader2, ShoppingCart } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { db } from '../firebase';
-import { collection, query, getDocs, where, doc, updateDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, getDocs, where, doc, updateDoc, setDoc, addDoc, serverTimestamp } from 'firebase/firestore';
 import { cn } from '../lib/utils';
 import { handleFirestoreError, OperationType } from '../lib/firebaseUtils';
 import BluetoothPrinterButton from './BluetoothPrinterButton';
@@ -44,7 +44,7 @@ export default function NewOrderModal({ isOpen, onClose, onSuccess, editMode = f
   const [addressCity, setAddressCity] = useState('');
   const [addressState, setAddressState] = useState('Odisha');
   const [addressPin, setAddressPin] = useState('');
-  const [store, setStore] = useState<'Store 1' | 'Store 2' | ''>('');
+  const [store, setStore] = useState<string>('BRAHMESWARPATNA');
   const [completedOrder, setCompletedOrder] = useState<any>(null);
 
   const isPinValid = addressPin === '' || /^\d{6}$/.test(addressPin);
@@ -55,6 +55,7 @@ export default function NewOrderModal({ isOpen, onClose, onSuccess, editMode = f
     setItems([{ id: '', name: '', price: 0, quantity: 1 }]);
     setDiscount(0);
     setPaymentMethod('CASH');
+    setStore('BRAHMESWARPATNA');
     setShowAddress(false);
     setAddressApt('');
     setAddressStreet('');
@@ -339,6 +340,12 @@ export default function NewOrderModal({ isOpen, onClose, onSuccess, editMode = f
           }
         }
 
+        // Save to Firestore
+        await addDoc(collection(db, 'orders'), {
+          ...payload,
+          createdAt: serverTimestamp()
+        });
+
         // Submit to Apps Script if configured
         if (url) {
           fetch(url, {
@@ -488,17 +495,6 @@ export default function NewOrderModal({ isOpen, onClose, onSuccess, editMode = f
                     </div>
 
                     <div className="text-center mt-8 pt-4 border-t border-dashed border-gray-400">
-                      <p className="text-xs font-bold uppercase tracking-widest text-black mb-2">Scan To Pay</p>
-                      <img 
-                        src="/qr_for_payment.jpeg" 
-                        alt="Payment QR Code" 
-                        className="w-24 h-24 mx-auto mb-4 border border-gray-200 rounded object-cover"
-                        onError={(e) => {
-                          // Fallback to dynamic if payment QR isn't uploaded yet
-                          const amt = completedOrder.grandTotal !== undefined ? completedOrder.grandTotal : completedOrder.totalAmount || 0;
-                          (e.target as HTMLImageElement).src = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent('upi://pay?pa=merchant@upi&pn=ThePurplePie&am=' + Number(amt).toFixed(2))}`;
-                        }}
-                      />
                       <p className="text-xs font-bold uppercase tracking-widest text-black">Thank You!</p>
                       <p className="text-[10px] text-gray-500 mt-1">Please keep this receipt for your records.</p>
                     </div>
@@ -553,27 +549,27 @@ export default function NewOrderModal({ isOpen, onClose, onSuccess, editMode = f
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
-                    onClick={() => setStore('Store 1')}
+                    onClick={() => setStore('BRAHMESWARPATNA')}
                     className={cn(
                       "flex-1 py-3 px-4 rounded-xl font-bold border-2 transition-all flex items-center justify-center gap-2",
-                      store === 'Store 1' 
+                      store === 'BRAHMESWARPATNA' 
                         ? "border-primary bg-primary/10 text-primary" 
                         : "border-primary/10 bg-white text-on-surface hover:border-primary/30"
                     )}
                   >
-                    Store 1
+                    BRAHMESWARPATNA
                   </button>
                   <button
                     type="button"
-                    onClick={() => setStore('Store 2')}
+                    onClick={() => setStore('BYPASS FOOD COURT')}
                     className={cn(
                       "flex-1 py-3 px-4 rounded-xl font-bold border-2 transition-all flex items-center justify-center gap-2",
-                      store === 'Store 2' 
+                      store === 'BYPASS FOOD COURT' 
                         ? "border-primary bg-primary/10 text-primary" 
                         : "border-primary/10 bg-white text-on-surface hover:border-primary/30"
                     )}
                   >
-                    Store 2
+                    BYPASS FOOD COURT
                   </button>
                 </div>
               </div>

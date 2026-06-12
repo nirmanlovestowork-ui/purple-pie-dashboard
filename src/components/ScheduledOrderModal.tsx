@@ -13,7 +13,7 @@ interface ScheduledOrderModalProps {
 export default function ScheduledOrderModal({ isOpen, onClose }: ScheduledOrderModalProps) {
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
-  const [store, setStore] = useState<'Store 1' | 'Store 2' | ''>('');
+  const [store, setStore] = useState<string>('BRAHMESWARPATNA');
   const [deliveryDate, setDeliveryDate] = useState('');
   const [deliveryTime, setDeliveryTime] = useState('');
   const [cakeFlavor, setCakeFlavor] = useState('');
@@ -94,7 +94,7 @@ export default function ScheduledOrderModal({ isOpen, onClose }: ScheduledOrderM
       
       setCustomerName('');
       setCustomerPhone('');
-      setStore('');
+      setStore('BRAHMESWARPATNA');
       setDeliveryDate('');
       setDeliveryTime('');
       setCakeFlavor('');
@@ -153,17 +153,17 @@ export default function ScheduledOrderModal({ isOpen, onClose }: ScheduledOrderM
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
-                    onClick={() => setStore('Store 1')}
-                    className={`flex-1 py-3 px-4 rounded-xl font-bold border-2 transition-all flex items-center justify-center gap-2 ${store === 'Store 1' ? 'border-primary bg-primary/10 text-primary' : 'border-primary/10 bg-white text-on-surface hover:border-primary/30'}`}
+                    onClick={() => setStore('BRAHMESWARPATNA')}
+                    className={`flex-1 py-3 px-4 rounded-xl font-bold border-2 transition-all flex items-center justify-center gap-2 ${store === 'BRAHMESWARPATNA' ? 'border-primary bg-primary/10 text-primary' : 'border-primary/10 bg-white text-on-surface hover:border-primary/30'}`}
                   >
-                    Store 1
+                    BRAHMESWARPATNA
                   </button>
                   <button
                     type="button"
-                    onClick={() => setStore('Store 2')}
-                    className={`flex-1 py-3 px-4 rounded-xl font-bold border-2 transition-all flex items-center justify-center gap-2 ${store === 'Store 2' ? 'border-primary bg-primary/10 text-primary' : 'border-primary/10 bg-white text-on-surface hover:border-primary/30'}`}
+                    onClick={() => setStore('BYPASS FOOD COURT')}
+                    className={`flex-1 py-3 px-4 rounded-xl font-bold border-2 transition-all flex items-center justify-center gap-2 ${store === 'BYPASS FOOD COURT' ? 'border-primary bg-primary/10 text-primary' : 'border-primary/10 bg-white text-on-surface hover:border-primary/30'}`}
                   >
-                    Store 2
+                    BYPASS FOOD COURT
                   </button>
                 </div>
               </div>

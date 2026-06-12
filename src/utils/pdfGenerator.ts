@@ -19,7 +19,8 @@ export const generateInvoice = (order: any) => {
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...textColor);
-  doc.text('Bhubaneswar, Odisha', doc.internal.pageSize.getWidth() / 2, 28, { align: 'center' });
+  const storeAddress = order.store ? `${order.store}, Odisha` : 'Odisha';
+  doc.text(storeAddress, doc.internal.pageSize.getWidth() / 2, 28, { align: 'center' });
 
   // Divider
   doc.setDrawColor(229, 231, 235); // #e5e7eb
