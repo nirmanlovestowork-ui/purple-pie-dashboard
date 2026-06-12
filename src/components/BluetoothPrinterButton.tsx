@@ -150,7 +150,10 @@ export default function BluetoothPrinterButton({ order, variant = 'default' }: P
                'e7810a71-73ae-499d-8c15-faa9aef0c3f2', 
                '49535343-fe7d-4ae5-8fa9-9fafd205e455', // IS113
                '00001814-0000-1000-8000-00805f9b34fb', // Generic printer
-               '00001101-0000-1000-8000-00805f9b34fb'  // SPP
+               '00001101-0000-1000-8000-00805f9b34fb', // SPP (though mostly classic, sometimes used in BLE)
+               '0000ff00-0000-1000-8000-00805f9b34fb', // Common thermal printer BLE
+               '0000af30-0000-1000-8000-00805f9b34fb',
+               '0000ae30-0000-1000-8000-00805f9b34fb'
            ]
         });
 
@@ -172,6 +175,10 @@ export default function BluetoothPrinterButton({ order, variant = 'default' }: P
         // Retry mechanism for connection
         let server = null;
         let connectError = null;
+        
+        // Brief delay before trying to connect (helps if device was just paired)
+        await new Promise(resolve => setTimeout(resolve, 500));
+
         for (let i = 0; i < 3; i++) {
           try {
             if (i > 0) {
@@ -182,11 +189,16 @@ export default function BluetoothPrinterButton({ order, variant = 'default' }: P
           } catch (e: any) {
             console.warn(`Connection attempt ${i + 1} failed:`, e);
             connectError = e;
+            try { if (device.gatt.connected) device.gatt.disconnect(); } catch (_) {}
           }
         }
         
         if (!server) {
-          throw new Error(`Failed to connect to printer after multiple attempts. ${connectError?.message || ''}`);
+          cachedPrinterDevice = null;
+          cachedWriteChar = null;
+          const isNetworkError = connectError?.name === 'NetworkError' || connectError?.message?.toLowerCase().includes('failed');
+          const helpText = isNetworkError ? "Make sure the printer is turned on, in range, and supports Bluetooth Low Energy (BLE). Classic Bluetooth-only printers cannot connect via web browsers. If it's a dual-mode printer, make sure it is not connected to your phone's Bluetooth settings (unpair it from Android settings first), then try again here." : connectError?.message;
+          throw new Error(`Failed to connect to printer. ${helpText}`);
         }
 
         const services = await server.getPrimaryServices();
@@ -210,14 +222,14 @@ export default function BluetoothPrinterButton({ order, variant = 'default' }: P
       const payload = await generateReceiptPayload();
 
       // Write in chunks due to BLE limits.
-      // Small payloads (text only) don't overrun as easily, but BLE max is typically 512. We use 256.
-      const chunkSize = 256; 
+      // Small payloads (text only) don't overrun as easily, but BLE max is typically 512. We use 64 for maximum compatibility.
+      const chunkSize = 64; 
       for (let i = 0; i < payload.length; i += chunkSize) {
         const chunk = payload.slice(i, i + chunkSize);
         
         if (writeChar.properties.writeWithoutResponse) {
            await writeChar.writeValueWithoutResponse(chunk);
-           await new Promise(resolve => setTimeout(resolve, 40)); // Safe wait 
+           await new Promise(resolve => setTimeout(resolve, 30)); // Delay between chunks
         } else if (writeChar.properties.write) {
            await writeChar.writeValue(chunk);
         }
@@ -234,6 +246,8 @@ export default function BluetoothPrinterButton({ order, variant = 'default' }: P
         setError('Bluetooth is blocked in this preview. Please click the "Open in New Tab" icon at the top right of the screen to print.');
       } else {
         console.error(err);
+        cachedPrinterDevice = null;
+        cachedWriteChar = null;
         setError(err.message || 'Failed to print. Check pairing.');
       }
     } finally {
