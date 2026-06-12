@@ -39,20 +39,7 @@ export default function BluetoothPrinterButton({ order, variant = 'default' }: P
 
     parts.push(encode(INIT));
     parts.push(encode(ALIGN_CENTER));
-
-    // Try to load and add logo
-    try {
-      if (!cachedLogoEscPos) {
-        const logoImg = await loadImage('/bw_logo.jpeg');
-        // Reduce logo size (240px instead of 300px) to speed up printing
-        cachedLogoEscPos = getImageEscPos(logoImg, 240);
-      }
-      parts.push(cachedLogoEscPos);
-      parts.push(encode(NEWLINE));
-    } catch (e) {
-      console.warn('Logo image failed to load, falling back to text:', e);
-      parts.push(encode(BOLD_ON + "THE PURPLE PIE" + BOLD_OFF + NEWLINE));
-    }
+    parts.push(encode(BOLD_ON + "THE PURPLE PIE" + BOLD_OFF + NEWLINE));
 
     let receipt = "";
     if (order && order.store) {
@@ -223,16 +210,14 @@ export default function BluetoothPrinterButton({ order, variant = 'default' }: P
       const payload = await generateReceiptPayload();
 
       // Write in chunks due to BLE limits.
-      // Small chunks (100 bytes) with a decent sleep (20ms) prevent printer buffer overruns.
-      // If the buffer overruns, the printer restarts and prints 2 bills or garbage.
-      const chunkSize = 100; 
+      // Small payloads (text only) don't overrun as easily, but BLE max is typically 512. We use 256.
+      const chunkSize = 256; 
       for (let i = 0; i < payload.length; i += chunkSize) {
         const chunk = payload.slice(i, i + chunkSize);
         
         if (writeChar.properties.writeWithoutResponse) {
            await writeChar.writeValueWithoutResponse(chunk);
-           // 20ms delay allows the printer time to process the buffer and physically print
-           await new Promise(resolve => setTimeout(resolve, 20)); 
+           await new Promise(resolve => setTimeout(resolve, 40)); // Safe wait 
         } else if (writeChar.properties.write) {
            await writeChar.writeValue(chunk);
         }
