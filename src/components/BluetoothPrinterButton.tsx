@@ -144,6 +144,7 @@ export default function BluetoothPrinterButton({ order, variant = 'default' }: P
   };
 
   const handleBluetoothPrint = async () => {
+    if (isPrinting) return;
     setError('');
     setIsPrinting(true);
     try {
@@ -206,8 +207,7 @@ export default function BluetoothPrinterButton({ order, variant = 'default' }: P
         
         for (const service of services) {
           const characteristics = await service.getCharacteristics();
-          writeChar = characteristics.find(c => c.properties.writeWithoutResponse) ||
-                      characteristics.find(c => c.properties.write) || null;
+          writeChar = characteristics.find(c => c.properties.write || c.properties.writeWithoutResponse) || null;
           if (writeChar) break;
         }
 
@@ -221,14 +221,16 @@ export default function BluetoothPrinterButton({ order, variant = 'default' }: P
       const payload = await generateReceiptPayload();
 
       // Write in chunks due to BLE limits
-      const chunkSize = 250;
+      // Some printers only support 512b MTU, so chunks of 250 are optimal.
+      const chunkSize = 250; 
       for (let i = 0; i < payload.length; i += chunkSize) {
         const chunk = payload.slice(i, i + chunkSize);
-        if (writeChar.properties.writeWithoutResponse) {
-           await writeChar.writeValueWithoutResponse(chunk);
-           await new Promise(resolve => setTimeout(resolve, 5));
-        } else {
+        if (writeChar.properties.write) {
+           // writeValue waits for ACK, inherently providing flow control
            await writeChar.writeValue(chunk);
+        } else if (writeChar.properties.writeWithoutResponse) {
+           await writeChar.writeValueWithoutResponse(chunk);
+           await new Promise(resolve => setTimeout(resolve, 5)); // Reduced manual delay to avoid printer timeout which could split bills
         }
       }
 
@@ -239,6 +241,8 @@ export default function BluetoothPrinterButton({ order, variant = 'default' }: P
       if (err.name === 'NotFoundError' || (err.message && err.message.toLowerCase().includes('cancelled'))) {
         console.warn('Bluetooth selection cancelled by user.');
         setError('Device selection cancelled.');
+      } else if (err.name === 'SecurityError' || (err.message && err.message.toLowerCase().includes('permissions policy'))) {
+        setError('Bluetooth is blocked in this preview. Please click the "Open in New Tab" icon at the top right of the screen to print.');
       } else {
         console.error(err);
         setError(err.message || 'Failed to print. Check pairing.');
