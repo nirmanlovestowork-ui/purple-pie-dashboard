@@ -39,7 +39,20 @@ export default function BluetoothPrinterButton({ order, variant = 'default' }: P
 
     parts.push(encode(INIT));
     parts.push(encode(ALIGN_CENTER));
-    parts.push(encode(BOLD_ON + "THE PURPLE PIE" + BOLD_OFF + NEWLINE));
+
+    // Try to load and add logo
+    try {
+      if (!cachedLogoEscPos) {
+        const logoImg = await loadImage('/bw_logo.jpeg');
+        // Reduce logo size (240px instead of 300px) to speed up printing
+        cachedLogoEscPos = getImageEscPos(logoImg, 240);
+      }
+      parts.push(cachedLogoEscPos);
+      parts.push(encode(NEWLINE));
+    } catch (e) {
+      console.warn('Logo image failed to load, falling back to text:', e);
+      parts.push(encode(BOLD_ON + "THE PURPLE PIE" + BOLD_OFF + NEWLINE));
+    }
 
     let receipt = "";
     if (order && order.store) {
