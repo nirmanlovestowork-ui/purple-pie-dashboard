@@ -1,6 +1,22 @@
 import jsPDF from 'jspdf';
 
-export const generateInvoice = (order: any) => {
+const loadImageAsBase64 = async (url: string): Promise<string> => {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.error("Error loading image:", error);
+    return "";
+  }
+};
+
+export const generateInvoice = async (order: any) => {
   // Calculate dynamic height based on content
   let numLines = 0;
   numLines += 1; // THE PURPLE PIE
@@ -44,12 +60,17 @@ export const generateInvoice = (order: any) => {
   numLines += 1; // Thank You!
   
   const lineHeight = 5;
-  const height = numLines * lineHeight + 30; // Extra margins
+  const logoHeight = 30; // mm
+  const height = numLines * lineHeight + 30 + logoHeight; // Extra margins and logo height
   
   const doc = new jsPDF({
     unit: 'mm',
     format: [80, Math.max(height, 100)] // Print on 80mm wide receipt width
   });
+
+  // Try fetching logo
+  const logoUrl = window.location.origin + '/bw_logo.jpeg';
+  const logoBase64 = await loadImageAsBase64(logoUrl);
 
   doc.setFont('courier', 'normal');
   doc.setFontSize(10);
@@ -60,6 +81,12 @@ export const generateInvoice = (order: any) => {
   const lX = 40 - (receiptWidth / 2); // Left align offset to match the 32 char center grid
   
   let y = 15;
+
+  if (logoBase64) {
+      const logoWidth = 30; // mm
+      doc.addImage(logoBase64, 'JPEG', cX - (logoWidth / 2), y, logoWidth, logoHeight);
+      y += logoHeight + 5; // increment Y beyond logo
+  }
   
   const addLine = (text: string, align: 'center' | 'left' = 'left', bold = false) => {
     doc.setFont('courier', bold ? 'bold' : 'normal');
