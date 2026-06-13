@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { db, auth } from '../firebase';
 import { collection, query, onSnapshot, doc, deleteDoc, updateDoc, getDocs, where } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { cn, formatTimestamp, parseDateTime } from '../lib/utils';
-import { Loader2, ShoppingBag, Lock, Search, Eye, X, Calendar, User, Hash, IndianRupee, CreditCard, MoreVertical, Edit, Trash2, Filter, CheckCircle, Download, MessageCircle } from 'lucide-react';
+import { Loader2, ShoppingBag, Lock, Search, Eye, X, Calendar, User, Hash, IndianRupee, CreditCard, MoreVertical, Edit, Trash2, Filter, CheckCircle, Download, MessageCircle, Banknote } from 'lucide-react';
 import { handleFirestoreError, OperationType, logActivity } from '../lib/firebaseUtils';
 import { motion, AnimatePresence } from 'motion/react';
 import BluetoothPrinterButton from './BluetoothPrinterButton';
@@ -266,18 +266,40 @@ const confirmDelete = async () => {
     return true;
   };
 
-  const filteredOrders = orders.filter(order => {
-    const matchesSearch = debouncedSearchTerm === '' || 
-      (order.customerName || '').toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-      (order.invoiceNo || '').toLowerCase().includes(debouncedSearchTerm.toLowerCase());
+  const filteredOrders = useMemo(() => {
+    return orders.filter(order => {
+      const matchesSearch = debouncedSearchTerm === '' || 
+        (order.customerName || '').toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+        (order.invoiceNo || '').toLowerCase().includes(debouncedSearchTerm.toLowerCase());
 
-    const matchesDate = isDateMatch(order.date, filterDate);
-    const matchesSource = filterSource === 'All' || (order.source || 'Offline').toUpperCase() === filterSource;
-    const matchesPayment = filterPayment === 'All' || (order.paymentMethod || 'CASH').toUpperCase() === filterPayment;
-    const matchesStore = filterStore === 'All' || (order.store || 'BRAHMESWARPATNA').toUpperCase() === filterStore.toUpperCase();
+      const matchesDate = isDateMatch(order.date, filterDate);
+      const matchesSource = filterSource === 'All' || (order.source || 'Offline').toUpperCase() === filterSource;
+      const matchesPayment = filterPayment === 'All' || (order.paymentMethod || 'CASH').toUpperCase() === filterPayment;
+      const matchesStore = filterStore === 'All' || (order.store || 'BRAHMESWARPATNA').toUpperCase() === filterStore.toUpperCase();
 
-    return matchesSearch && matchesDate && matchesSource && matchesPayment && matchesStore;
-  });
+      return matchesSearch && matchesDate && matchesSource && matchesPayment && matchesStore;
+    });
+  }, [orders, debouncedSearchTerm, filterDate, filterSource, filterPayment, filterStore]);
+
+  const totals = useMemo(() => {
+    return filteredOrders.reduce(
+      (acc, order) => {
+        acc.grandTotal += order.grandTotal || 0;
+        acc.subtotal += order.subtotal || 0;
+        acc.discount += order.discount || 0;
+        
+        const paymentMethod = (order.paymentMethod || 'CASH').toUpperCase();
+        if (paymentMethod === 'UPI') {
+          acc.upiTotal += order.grandTotal || 0;
+        } else {
+          acc.cashTotal += order.grandTotal || 0;
+        }
+        
+        return acc;
+      },
+      { grandTotal: 0, subtotal: 0, discount: 0, upiTotal: 0, cashTotal: 0, count: filteredOrders.length }
+    );
+  }, [filteredOrders]);
 
   const cleanupDatabase = async () => {
     if (isCleaning) return;
@@ -405,6 +427,50 @@ const confirmDelete = async () => {
           </button>
         </div>
       </div>
+
+      {!loading && filteredOrders.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+          <div className="bg-white p-6 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.05)] flex items-center gap-4">
+            <div className="p-3 bg-sidebar/5 rounded-xl text-sidebar">
+              <ShoppingBag size={24} />
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest">Total Revenue</h4>
+              <p className="text-2xl font-bold text-gray-900">₹{totals.grandTotal % 1 !== 0 ? totals.grandTotal.toFixed(2) : totals.grandTotal}</p>
+            </div>
+          </div>
+          
+          <div className="bg-white p-6 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.05)] flex items-center gap-4">
+            <div className="p-3 bg-green-50 rounded-xl text-green-600">
+              <Banknote size={24} />
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest">Cash Sales</h4>
+              <p className="text-2xl font-bold text-gray-900">₹{totals.cashTotal % 1 !== 0 ? totals.cashTotal.toFixed(2) : totals.cashTotal}</p>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.05)] flex items-center gap-4">
+            <div className="p-3 bg-blue-50 rounded-xl text-blue-600">
+              <CreditCard size={24} />
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest">UPI Sales</h4>
+              <p className="text-2xl font-bold text-gray-900">₹{totals.upiTotal % 1 !== 0 ? totals.upiTotal.toFixed(2) : totals.upiTotal}</p>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.05)] flex items-center gap-4">
+            <div className="p-3 bg-amber-50 rounded-xl text-accent-gold">
+              <CheckCircle size={24} />
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest">Total Orders</h4>
+              <p className="text-2xl font-bold text-gray-900">{totals.count}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
         {loading ? (
