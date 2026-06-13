@@ -65,7 +65,7 @@ function DashboardHome({ orders, todayStats, isAdmin, showToast, setIsScheduledM
             <BarChart3 size={16} className="text-gray-300" />
           </div>
           <div className="flex-1 flex flex-col justify-center">
-             <TrendingProducts compact={true} />
+             <TrendingProducts compact={true} orders={orders} />
           </div>
         </div>
       </div>
