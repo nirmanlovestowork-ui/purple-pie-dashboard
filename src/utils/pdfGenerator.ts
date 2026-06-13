@@ -1,88 +1,137 @@
 import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 
 export const generateInvoice = (order: any) => {
-  const doc = new jsPDF();
+  // Calculate dynamic height based on content
+  let numLines = 0;
+  numLines += 1; // THE PURPLE PIE
+  if (order.store) numLines += 1;
+  numLines += 2; // Address, Treat Receipt
+  numLines += 1; // dashes
   
-  // Colors
-  const primaryColor: [number, number, number] = [125, 0, 125]; // #7D007D
-  const textColor: [number, number, number] = [55, 65, 81]; // #374151
-  const mutedColor: [number, number, number] = [156, 163, 175]; // #9ca3af
-
-  // Header: THE PURPLE PIE
-  doc.setFontSize(24);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...primaryColor);
-  doc.text('THE PURPLE PIE', doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
-
-  // Address
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(...textColor);
-  const storeAddress = order.store ? `${order.store}, Odisha` : 'Odisha';
-  doc.text(storeAddress, doc.internal.pageSize.getWidth() / 2, 28, { align: 'center' });
-
-  // Divider
-  doc.setDrawColor(229, 231, 235); // #e5e7eb
-  doc.line(14, 35, doc.internal.pageSize.getWidth() - 14, 35);
-
-  // Order Metadata
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(...textColor);
+  numLines += 2; // Date, Guest
+  numLines += 1; // dashes
+  numLines += 1; // Your Indulgence Total
+  numLines += 1; // dashes
   
-  const startY = 45;
-  const lineSpacing = 6;
+  const items = order.items || [];
+  items.forEach(() => {
+     numLines += 2; // name, qty * price
+  });
   
-  doc.text(`Invoice No: ${order.invoiceNo || order.id}`, 14, startY);
-  doc.text(`Date: ${order.date || 'N/A'}`, 14, startY + lineSpacing);
-  doc.text(`Time: ${order.time || 'N/A'}`, 14, startY + lineSpacing * 2);
-  doc.text(`Customer: ${order.customerName || 'Guest'}`, 14, startY + lineSpacing * 3);
-
-  // Table
-  const tableData = (order.items || []).map((item: any) => [
-    item.name || 'Unknown Item',
-    item.qty || item.quantity || 1,
-    `₹${Number(item.price || 0).toFixed(2)}`,
-    `₹${Number((item.price || 0) * (item.qty || item.quantity || 1)).toFixed(2)}`
-  ]);
-
-  autoTable(doc, {
-    startY: startY + lineSpacing * 4 + 5,
-    head: [['Item Name', 'Qty', 'Price', 'Total']],
-    body: tableData,
-    theme: 'grid',
-    headStyles: {
-      fillColor: primaryColor,
-      textColor: [255, 255, 255],
-      fontStyle: 'bold',
-    },
-    styles: {
-      fontSize: 10,
-      textColor: textColor,
-    },
-    alternateRowStyles: {
-      fillColor: [249, 250, 251], // #f9fafb
-    },
+  numLines += 1; // dashes
+  numLines += 1; // Subtotal
+  if (order.discount && order.discount > 0) numLines += 1;
+  numLines += 1; // TOTAL
+  if (order.paymentMethod) numLines += 1;
+  
+  numLines += 1; // dashes
+  
+  // Footer wrapping approx lines
+  const footerMsg = "From your ovens to your heart, thank you for choosing The Purple Pie. Tag us @the.purplepie to get featured. #thepurplepie";
+  const words = footerMsg.split(' ');
+  let currentWordLine = '';
+  words.forEach(word => {
+      if ((currentWordLine + word).length > 32) {
+          numLines += 1;
+          currentWordLine = word + ' ';
+      } else {
+          currentWordLine += word + ' ';
+      }
+  });
+  if (currentWordLine.trim()) numLines += 1;
+  
+  numLines += 1; // dashes
+  numLines += 1; // Thank You!
+  
+  const lineHeight = 5;
+  const height = numLines * lineHeight + 30; // Extra margins
+  
+  const doc = new jsPDF({
+    unit: 'mm',
+    format: [80, Math.max(height, 100)] // Print on 80mm wide receipt width
   });
 
-  // Totals
-  const finalY = (doc as any).lastAutoTable.finalY || 100;
-  
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...textColor);
-  
-  const grandTotal = order.grandTotal || order.totalAmount || 0;
-  doc.text(`Grand Total: ₹${Number(grandTotal).toFixed(2)}`, doc.internal.pageSize.getWidth() - 14, finalY + 10, { align: 'right' });
-
-  // Footer
+  doc.setFont('courier', 'normal');
   doc.setFontSize(10);
-  doc.setFont('helvetica', 'italic');
-  doc.setTextColor(...mutedColor);
-  doc.text('Thank you for your business! | The Purple Pie', doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() - 15, { align: 'center' });
+  
+  const charWidth = doc.getTextWidth('-');
+  const receiptWidth = charWidth * 32;
+  const cX = 40; // Center X for 80mm width page
+  const lX = 40 - (receiptWidth / 2); // Left align offset to match the 32 char center grid
+  
+  let y = 15;
+  
+  const addLine = (text: string, align: 'center' | 'left' = 'left', bold = false) => {
+    doc.setFont('courier', bold ? 'bold' : 'normal');
+    if (align === 'center') {
+      doc.text(text, cX, y, { align: 'center' });
+    } else {
+      doc.text(text, lX, y);
+    }
+    y += lineHeight;
+  };
+  
+  const formatLine = (left: string, right: string, maxLength = 32) => {
+      const leftStr = String(left);
+      const rightStr = String(right);
+      const spaces = Math.max(0, maxLength - leftStr.length - rightStr.length);
+      return leftStr + ' '.repeat(spaces) + rightStr;
+  };
 
-  // Export
-  const filename = `Invoice_${order.invoiceNo || order.id}.pdf`;
+  addLine("THE PURPLE PIE", 'center', true);
+  if (order.store) {
+     addLine(order.store.toUpperCase(), 'center', true);
+  }
+  addLine("Tankapani Road, BBSR", 'center');
+  addLine("Treat Receipt", 'center');
+  addLine("--------------------------------", 'center');
+  
+  addLine(`Date: ${order.date || ''} ${order.time || ''}`, 'left');
+  addLine(`Sweet Guest: ${order.customerName || 'Guest'}`, 'left');
+  addLine("--------------------------------", 'center');
+  addLine(formatLine("Your Indulgence", "Total"), 'left');
+  addLine("--------------------------------", 'center');
+  
+  items.forEach((item: any) => {
+       const nameStr = item.name.substring(0, 32); 
+       addLine(nameStr, 'left');
+       const qty = item.qty !== undefined ? item.qty : (item.quantity !== undefined ? item.quantity : 1);
+       const subtotal = (Number(item.price || 0) * Number(qty));
+       addLine(formatLine(`${qty} x ${Number(item.price || 0).toFixed(2)}`, `Rs. ${Number(subtotal).toFixed(2)}`), 'left');
+  });
+  
+  addLine("--------------------------------", 'center');
+  addLine(formatLine("Subtotal", `Rs. ${Number(order.subtotal || 0).toFixed(2)}`), 'left');
+  if (order.discount && order.discount > 0) {
+      addLine(formatLine("Discount", `-Rs. ${Number(order.discount).toFixed(2)}`), 'left');
+  }
+  
+  const totalAmount = order.grandTotal !== undefined ? order.grandTotal : (order.totalAmount || 0);
+  addLine(formatLine("TOTAL", `Rs. ${Number(totalAmount).toFixed(2)}`), 'left', true);
+  
+  if (order.paymentMethod) {
+      addLine(formatLine("Mode of Payment", order.paymentMethod), 'left');
+  }
+  
+  addLine("--------------------------------", 'center');
+  
+  let currentLine = '';
+  words.forEach(word => {
+      if ((currentLine + word).length > 32) {
+          addLine(currentLine.trim(), 'center');
+          currentLine = word + ' ';
+      } else {
+          currentLine += word + ' ';
+      }
+  });
+  if (currentLine.trim()) {
+      addLine(currentLine.trim(), 'center');
+  }
+  
+  addLine("--------------------------------", 'center');
+  addLine("Thank You!", 'center');
+  
+  const filename = `Receipt_${order.invoiceNo || order.id}.pdf`;
   doc.save(filename);
 };
+
