@@ -115,7 +115,7 @@ export default function BluetoothPrinterButton({ order, variant = 'default' }: P
     receipt += "--------------------------------" + NEWLINE;
     receipt += ALIGN_CENTER;
     
-    const footerMsg = "From your ovens to your heart, thank you for choosing The Purple Pie. Tag us @the.purplepie to get featured. #thepurplepie";
+    const footerMsg = "From our ovens to your heart, thank you for choosing The Purple Pie. Tag us @the.purplepie to get featured. #thepurplepie";
     const words = footerMsg.split(' ');
     let currentLine = '';
     
