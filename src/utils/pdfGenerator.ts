@@ -43,7 +43,7 @@ export const generateInvoice = async (order: any) => {
   numLines += 1; // dashes
   
   // Footer wrapping approx lines
-  const footerMsg = "From your ovens to your heart, thank you for choosing The Purple Pie. Tag us @the.purplepie to get featured. #thepurplepie";
+  const footerMsg = "From our ovens to your heart, thank you for choosing The Purple Pie. Tag us @the.purplepie to get featured. #thepurplepie";
   const words = footerMsg.split(' ');
   let currentWordLine = '';
   words.forEach(word => {
