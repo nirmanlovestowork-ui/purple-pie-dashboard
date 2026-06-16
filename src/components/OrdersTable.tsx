@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { db, auth } from '../firebase';
 import { collection, query, onSnapshot, updateDoc, doc, getDocs, where } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { cn, formatTimestamp, parseDateTime } from '../lib/utils';
-import { Loader2, ShoppingBag, Lock, CheckCircle, MessageCircle } from 'lucide-react';
+import { Loader2, ShoppingBag, Lock, CheckCircle, MessageCircle, X } from 'lucide-react';
 import { handleFirestoreError, OperationType, logActivity } from '../lib/firebaseUtils';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface Order {
   id: string;
@@ -41,6 +43,18 @@ export default function OrdersTable({ filterToday = false }: { filterToday?: boo
   const { showToast } = useToast();
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const [orderToComplete, setOrderToComplete] = useState<{ id: string, details: any } | null>(null);
+
+  useEffect(() => {
+    if (orderToComplete) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [orderToComplete]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -334,7 +348,7 @@ export default function OrdersTable({ filterToday = false }: { filterToday?: boo
               </td>
               <td className="py-4 text-right align-middle">
                 <button
-                  onClick={() => handleMarkCompleted(order.id, order)}
+                  onClick={() => setOrderToComplete({ id: order.id, details: order })}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:shadow-sm rounded text-xs font-bold uppercase transition-all"
                 >
                   <CheckCircle size={14} className="text-green-600" />
@@ -368,6 +382,57 @@ export default function OrdersTable({ filterToday = false }: { filterToday?: boo
             </button>
           </div>
         </div>
+      )}
+
+      {createPortal(
+        <AnimatePresence>
+          {orderToComplete && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setOrderToComplete(null)}
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                className="bg-surface rounded-2xl shadow-xl w-full max-w-sm overflow-hidden border border-outline-variant/20"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="p-6 text-center">
+                  <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle size={32} className="text-green-600" />
+                  </div>
+                  <h3 className="text-xl font-bold font-headline text-on-surface mb-2">Complete Order?</h3>
+                  <p className="text-sm text-on-surface-variant mb-6">
+                    Are you sure you want to mark this order as completed? This action will decrement inventory stock according to the order items.
+                  </p>
+                  
+                  <div className="flex flex-col gap-3">
+                    <button
+                      onClick={async () => {
+                        await handleMarkCompleted(orderToComplete.id, orderToComplete.details);
+                        setOrderToComplete(null);
+                      }}
+                      className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition-colors"
+                    >
+                      Yes, Mark Completed
+                    </button>
+                    <button
+                      onClick={() => setOrderToComplete(null)}
+                      className="w-full py-3 bg-surface-container hover:bg-surface-container-high text-on-surface font-bold rounded-xl transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
       )}
     </div>
   );
