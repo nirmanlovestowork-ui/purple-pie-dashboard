@@ -731,13 +731,6 @@ export default function NewOrderModal({ isOpen, onClose, onSuccess, editMode = f
               <div className="space-y-6 pt-8 border-t border-primary/5">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-bold text-primary font-headline">Order Items</h3>
-                  <button 
-                    onClick={addItemRow}
-                    className="flex items-center gap-2 text-xs font-bold text-primary hover:text-primary/70 transition-colors"
-                  >
-                    <Plus size={16} />
-                    Add Product
-                  </button>
                 </div>
 
                 <div className="space-y-4">
@@ -803,6 +796,14 @@ export default function NewOrderModal({ isOpen, onClose, onSuccess, editMode = f
                       </div>
                     </div>
                   ))}
+                  
+                  <button 
+                    onClick={addItemRow}
+                    className="w-full py-4 mt-2 rounded-xl flex justify-center items-center gap-2 bg-gradient-to-r from-primary to-primary/80 text-white font-bold transition-all shadow-md hover:shadow-lg focus:ring-2 focus:ring-accent-gold/20"
+                  >
+                    <Plus size={18} />
+                    Add Item
+                  </button>
                 </div>
               </div>
 
