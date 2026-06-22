@@ -12,7 +12,7 @@ import {
 } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { cn } from '../lib/utils';
-import { handleFirestoreError, OperationType } from '../lib/firebaseUtils';
+import { handleFirestoreError, OperationType, logAudit } from '../lib/firebaseUtils';
 import { useAuth } from '../context/AuthContext';
 
 interface InventoryItem {
@@ -145,9 +145,11 @@ export default function InventoryManagement({ isAddItemModalOpen, setIsAddItemMo
     try {
       if (editingItem) {
         await updateDoc(doc(db, 'inventory', editingItem.id), data);
+        await logAudit('ITEM_UPDATED', `Updated item ${data.name}`);
         showToast(`Updated ${data.name} successfully!`, 'success');
       } else {
         await addDoc(collection(db, 'inventory'), data);
+        await logAudit('ITEM_ADDED', `Added item ${data.name}`);
         showToast(`Added ${data.name} to inventory!`, 'success');
       }
       setIsModalOpen(false);
@@ -162,6 +164,7 @@ export default function InventoryManagement({ isAddItemModalOpen, setIsAddItemMo
     const itemToDelete = items.find(i => i.id === id);
     try {
       await deleteDoc(doc(db, 'inventory', id));
+      await logAudit('ITEM_DELETED', `Deleted item ${itemToDelete?.name || id}`);
       showToast(`${itemToDelete?.name || 'Item'} removed from inventory.`, 'success');
       setIsDeleteConfirmOpen(null);
     } catch (e) {

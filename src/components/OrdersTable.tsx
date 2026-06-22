@@ -5,7 +5,7 @@ import { collection, query, onSnapshot, updateDoc, doc, getDocs, where } from 'f
 import { onAuthStateChanged } from 'firebase/auth';
 import { cn, formatTimestamp, parseDateTime } from '../lib/utils';
 import { Loader2, ShoppingBag, Lock, CheckCircle, MessageCircle, X } from 'lucide-react';
-import { handleFirestoreError, OperationType, logActivity } from '../lib/firebaseUtils';
+import { handleFirestoreError, OperationType, logAudit } from '../lib/firebaseUtils';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'motion/react';
@@ -100,7 +100,7 @@ export default function OrdersTable({ filterToday = false }: { filterToday?: boo
         }
       }
 
-      await logActivity("Completed", "Admin", orderId);
+      await logAudit('ORDER_COMPLETED', `Marked order ${orderId} as completed`);
       showToast("Order marked as completed!", "success");
     } catch (error) {
       console.error("Error marking order as completed:", error);

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, setPersistence, browserLocalPersistence, User } from 'firebase/auth';
 import { auth } from '../firebase';
+import { logAudit } from '../lib/firebaseUtils';
 
 const ALLOWED_USERS = ["heynirman@gmail.com", "contact.to.tts@gmail.com", "thepurplepie.business@gmail.com"];
 
@@ -70,7 +71,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      if (result.user && ALLOWED_USERS.includes(result.user.email || '')) {
+         await logAudit('USER_LOGIN', `User ${result.user.email} logged in via Google`);
+      }
     } catch (error: any) {
       if (error.code === 'auth/popup-closed-by-user') {
         console.log("Sign in popup was closed by the user.");
@@ -81,10 +85,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signInWithCredentials = async (u: string, p: string) => {
-    if ((u === "tpp.bypass" || u === "tpp.bypaas") && p === "TPP.outlet2") {
+    const normalizedUser = u.trim().toLowerCase();
+    if ((normalizedUser === "tpp.bypass" || normalizedUser === "tpp.bypaas") && p.trim() === "TPP.outlet2") {
       localStorage.setItem('ttp_bypass', 'true');
       setUser(BYPASS_USER);
       setIsAllowed(true);
+      await logAudit('USER_LOGIN', `User ${BYPASS_USER.email} logged in via bypass`);
       return true;
     }
     return false;
@@ -92,6 +98,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
+      await logAudit('USER_LOGOUT', `User ${user?.email || 'Unknown'} logged out`);
       if (localStorage.getItem('ttp_bypass') === 'true') {
         localStorage.removeItem('ttp_bypass');
         setUser(null);

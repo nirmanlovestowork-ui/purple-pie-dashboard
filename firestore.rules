@@ -36,6 +36,12 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Audit Logs: Admin only (writes allowed by app for logging)
+    match /auditlogs/{document=**} {
+      allow read: if isAdmin();
+      allow write: if isAuthenticated();
+    }
+
     // Users: Owner or Admin
     match /users/{userId} {
       allow read, write: if isAuthenticated() && (request.auth.uid == userId || isAdmin());

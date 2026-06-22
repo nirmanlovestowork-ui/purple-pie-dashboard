@@ -7,10 +7,11 @@ import { Loader2, Filter } from 'lucide-react';
 
 interface ActivityLog {
   id: string;
-  actionType: string;
+  event: string;
   description: string;
   timestamp: any;
   user: string;
+  userRole?: string;
 }
 
 export default function ActivityLogs() {
@@ -20,7 +21,7 @@ export default function ActivityLogs() {
 
   useEffect(() => {
     const q = query(
-      collection(db, 'activity_logs'),
+      collection(db, 'auditlogs'),
       orderBy('timestamp', 'desc'),
       limit(50)
     );
@@ -34,7 +35,7 @@ export default function ActivityLogs() {
       setLogs(logsData);
       setLoading(false);
     }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'activity_logs');
+      handleFirestoreError(error, OperationType.GET, 'auditlogs');
       setLoading(false);
     });
 
@@ -43,9 +44,9 @@ export default function ActivityLogs() {
 
   const filteredLogs = logs.filter(log => {
     if (filter === 'All') return true;
-    if (filter === 'Orders') return log.actionType?.includes('ORDER');
-    if (filter === 'Inventory') return log.actionType?.includes('INVENTORY');
-    if (filter === 'Payments') return log.actionType?.includes('PAYMENT');
+    if (filter === 'Orders') return log.event?.includes('ORDER');
+    if (filter === 'Items') return log.event?.includes('ITEM');
+    if (filter === 'Users') return log.event?.includes('USER');
     return true;
   });
 
@@ -65,8 +66,8 @@ export default function ActivityLogs() {
           >
             <option value="All">All Events</option>
             <option value="Orders">Orders</option>
-            <option value="Inventory">Inventory</option>
-            <option value="Payments">Payments</option>
+            <option value="Items">Items</option>
+            <option value="Users">Users</option>
           </select>
           <Filter className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant/50 pointer-events-none" />
         </div>
@@ -103,12 +104,12 @@ export default function ActivityLogs() {
                       </span>
                       <span className={cn(
                         "px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
-                        log.actionType?.includes('ORDER') ? "bg-blue-50 text-blue-600" :
-                        log.actionType?.includes('INVENTORY') ? "bg-amber-50 text-amber-600" :
-                        log.actionType?.includes('PAYMENT') ? "bg-emerald-50 text-emerald-600" :
+                        log.event?.includes('ORDER') ? "bg-blue-50 text-blue-600" :
+                        log.event?.includes('ITEM') ? "bg-amber-50 text-amber-600" :
+                        log.event?.includes('USER') ? "bg-emerald-50 text-emerald-600" :
                         "bg-gray-50 text-gray-600"
                       )}>
-                        {log.actionType?.replace(/_/g, ' ')}
+                        {log.event?.replace(/_/g, ' ')}
                       </span>
                     </div>
                     <p className="text-on-surface-variant text-sm leading-relaxed">

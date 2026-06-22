@@ -4,7 +4,7 @@ import { collection, query, onSnapshot, doc, deleteDoc, updateDoc, getDocs, wher
 import { onAuthStateChanged } from 'firebase/auth';
 import { cn, formatTimestamp, parseDateTime } from '../lib/utils';
 import { Loader2, ShoppingBag, Lock, Search, Eye, X, Calendar, User, Hash, IndianRupee, CreditCard, MoreVertical, Edit, Trash2, Filter, CheckCircle, Download, MessageCircle, Banknote } from 'lucide-react';
-import { handleFirestoreError, OperationType, logActivity } from '../lib/firebaseUtils';
+import { handleFirestoreError, OperationType, logAudit } from '../lib/firebaseUtils';
 import { motion, AnimatePresence } from 'motion/react';
 import BluetoothPrinterButton from './BluetoothPrinterButton';
 import NewOrderModal from './NewOrderModal';
@@ -101,6 +101,7 @@ const confirmDelete = async () => {
     
     try {
       await deleteDoc(doc(db, "orders", documentId));
+      await logAudit('ORDER_DELETED', `Deleted order ${documentId}`);
       showToast("Order deleted successfully!", "success");
       setOrderToDelete(null); // Close modal on success
     } catch (error) {
@@ -153,7 +154,7 @@ const confirmDelete = async () => {
         }
       }
 
-      await logActivity("Completed", "Admin", orderId);
+      await logAudit('ORDER_COMPLETED', `Marked order ${orderId} as completed`);
       showToast("Order marked as completed!", "success");
       setOpenDropdownId(null);
     } catch (error) {

@@ -52,15 +52,20 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
   throw new Error(JSON.stringify(errInfo));
 }
 
-export async function logActivity(action: string, userRole: string, targetId: string) {
+export async function logAudit(
+  event: 'ORDER_CREATED' | 'ORDER_UPDATED' | 'ORDER_COMPLETED' | 'ORDER_DELETED' | 'ITEM_ADDED' | 'ITEM_UPDATED' | 'ITEM_DELETED' | 'USER_LOGIN' | 'USER_LOGOUT',
+  description: string
+) {
   try {
-    await addDoc(collection(db, 'activityLogs'), {
-      action,
+    const userRole = auth.currentUser?.email === 'admin@thepurplepie.com' ? 'Admin' : 'Staff';
+    await addDoc(collection(db, 'auditlogs'), {
+      event,
+      user: auth.currentUser?.email || 'System',
       userRole,
-      targetId,
+      description,
       timestamp: serverTimestamp()
     });
   } catch (error) {
-    console.error("Failed to log activity:", error);
+    console.error("Failed to log audit:", error);
   }
 }

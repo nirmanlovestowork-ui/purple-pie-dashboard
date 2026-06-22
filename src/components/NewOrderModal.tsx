@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { db } from '../firebase';
 import { collection, query, getDocs, where, doc, updateDoc, setDoc, addDoc, serverTimestamp } from 'firebase/firestore';
 import { cn } from '../lib/utils';
-import { handleFirestoreError, OperationType } from '../lib/firebaseUtils';
+import { handleFirestoreError, OperationType, logAudit } from '../lib/firebaseUtils';
 import BluetoothPrinterButton from './BluetoothPrinterButton';
 
 interface NewOrderModalProps {
@@ -309,6 +309,8 @@ export default function NewOrderModal({ isOpen, onClose, onSuccess, editMode = f
           items: items.map(i => ({ name: i.name, qty: i.quantity, price: i.price, subtotal: i.price * i.quantity }))
         });
         
+        await logAudit('ORDER_UPDATED', `Updated order ${initialData.id}`);
+
         resetForm();
         onSuccess();
         onClose();
@@ -341,7 +343,8 @@ export default function NewOrderModal({ isOpen, onClose, onSuccess, editMode = f
         };
 
         // Save to Firestore
-        await addDoc(collection(db, 'orders'), payload);
+        const docRef = await addDoc(collection(db, 'orders'), payload);
+        await logAudit('ORDER_CREATED', `Created order ${docRef.id} recorded with amount ₹${payload.grandTotal}`);
 
         // Update inventory
         for (const item of items) {
